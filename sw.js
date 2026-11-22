@@ -3,7 +3,7 @@
 // Die Daten selbst hält Firestore offline vor.
 // Test und Produktiv liegen auf derselben Domain: Cache-Namen pro Pfad trennen.
 const PREFIX = 'llk' + new URL(self.registration.scope).pathname;
-const CACHE = PREFIX + 'v5';
+const CACHE = PREFIX + 'v6';
 const SHELL = ['./', 'index.html', 'config.js', 'firebase.js', 'jspdf.min.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'logo-band.png', 'logo-print.jpg'];
 
 self.addEventListener('install', e => {

@@ -146,6 +146,10 @@ section.s h3{font:600 15px/1.2 Montserrat,sans-serif;color:var(--mut);margin:0 0
 .trow input,.trow select{padding:8px}
 .tprow{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:6px;margin-bottom:14px;align-items:center}
 .tpsub{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.tprow .tpsub input[data-f=km]{width:5.2em;flex:none}.tpsub span{color:var(--mut);font-size:14px}
+.free{display:grid;grid-template-columns:4.2em minmax(0,1fr);gap:10px;width:100%;text-align:left;border:1.5px dashed var(--line);border-radius:12px;background:none;color:inherit;font:inherit;padding:8px 10px;margin:6px 0;align-items:start;cursor:pointer}
+.free .tm{font-size:20px;color:var(--mut)}.free b{color:var(--cy)}.free small{display:block;color:var(--mut)}
+.ev.blk .tm{color:var(--mut)}
+.warn{background:var(--pkbg);border-radius:10px;padding:8px 10px;margin:6px 0;font-size:15px}.okay{color:var(--cy);margin:6px 0;font-weight:600}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:end}
 .mrow{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;display:grid;gap:8px}
 .mrow-h{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:6px}
@@ -201,11 +205,11 @@ nav.tabs svg{width:24px;height:24px}
 <script type="module" src="firebase.js"></script>
 <script>
 {
-const DEF={stundentarif:60,zuschlag:0,treffpunkte:[{name:'Flumserberg Sennenstube',km:14.1,park:true},{name:'Flumserberg Prodalp',km:16.7,park:true},{name:'Einsiedeln Trachslau Loipe',km:67.6,park:false},{name:'Einsiedeln Schwedentritt Loipe',km:67.4,park:false}],heimadresse:'Pfrundwingertstrasse 5, 8893 Flums Hochwiese',kmAnsatz:0.75,park4:5,park10:8,parkWoche:40,mietTag:25,absender:'Esther',firma:'Langlaufspass.ch',adresse:'',email:'info@langlaufspass.ch',
+const DEF={stundentarif:60,zuschlag:0,treffpunkte:[{name:'Flumserberg Sennenstube',km:14.1,park:true},{name:'Flumserberg Prodalp',km:16.7,park:true},{name:'Einsiedeln Trachslau Loipe',km:67.6,park:false},{name:'Einsiedeln Schwedentritt Loipe',km:67.4,park:false}],heimadresse:'Pfrundwingertstrasse 5, 8893 Flums Hochwiese',kmAnsatz:0.75,park4:5,park10:8,parkWoche:40,mietTag:25,arbeitVon:'08:30',arbeitBis:'17:00',absender:'Esther',firma:'Langlaufspass.ch',adresse:'',email:'info@langlaufspass.ch',
 tplOk:'Hallo {vorname}, gerne bestätige ich deine Langlauflektion am {datum} von {zeit} bis {bis} Uhr. Treffpunkt: {treffpunkt}. Ich freue mich! {absender}, Langlaufspass.ch',
 tplErin:'Hallo {vorname}, kurze Erinnerung an die Langlauflektion am {datum} um {zeit} Uhr. Treffpunkt: {treffpunkt}. Bis bald! {absender}',
 tplAbs:'Hallo {vorname}, leider muss ich die Lektion am {datum} um {zeit} Uhr wegen der Verhältnisse absagen. Ich melde mich für einen neuen Termin. {absender}'};
-const ZA=['Bar','TWINT','Überweisung','Gutschein'],NV='Nicht verrechnet',ZP=[...ZA,NV],ZS={'Überweisung':'Überw.','Nicht verrechnet':'Nicht verr.'};
+const ZA=['Bar','TWINT','Gutschein'],NV='Nicht verrechnet',ZP=[...ZA,NV],ZS={'Überweisung':'Überw.','Nicht verrechnet':'Nicht verr.'};
 const KAT=['Parkgebühren','Material & Wachs','Mietmaterial','Weiterbildung','Versicherung','Werbung & Website','Telefon','Diverses'];
 const NIV=['Einsteiger','Fortgeschritten','Sportlich'];
 const TECH=['Klassisch','Skating','Beides'];
@@ -215,7 +219,7 @@ const VIEWS=['heute','kalender','kunden','kurse','geld'];
 const WD=['So','Mo','Di','Mi','Do','Fr','Sa'],WDL=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 const MO=['Jan.','Feb.','März','Apr.','Mai','Juni','Juli','Aug.','Sept.','Okt.','Nov.','Dez.'];
 const MOL=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-const S={kunden:[],lektionen:[],kurse:[],ausgaben:[],cfg:{...DEF},view:'heute',cal:null,sel:null,year:new Date().getFullYear(),q:'',sheet:null,back:null,confirm:null,open:{},mode:'laden',drawn:null,user:undefined,unsubs:[]};
+const S={kunden:[],lektionen:[],kurse:[],ausgaben:[],blocker:[],cfg:{...DEF},view:'heute',cal:null,sel:null,year:new Date().getFullYear(),q:'',sheet:null,back:null,confirm:null,open:{},mode:'laden',drawn:null,user:undefined,unsubs:[]};
 let db=null,dl=null,loadT=null,FB=null;
 const ENV=window.APP_ENV==='test'?'test':'prod';
 if(ENV==='test'){document.documentElement.classList.add('env-test');document.title='LL-Kurse TEST';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#7f1414')}
@@ -289,12 +293,12 @@ async function drop(col,id){if(!db){S[col]=S[col].filter(x=>x.id!==id);render();
 async function putCfg(c){if(!db){S.cfg={...DEF,...c};render();return true}try{await db.doc('config/main').set(c);return true}catch(e){fail(e);return false}}
 async function updK(id,fn){const k=getK(id);if(!k)return false;const c=structuredClone(k);fn(c);return put('kurse',c)}
 function subscribe(){const got=new Set();
-  const ok=()=>{if(got.size>=5&&S.mode!=='ok'){clearTimeout(loadT);S.mode='ok'}};
+  const ok=()=>{if(got.size>=6&&S.mode!=='ok'){clearTimeout(loadT);S.mode='ok'}};
   loadT=setTimeout(()=>{if(S.mode==='laden'){S.mode='langsam';render()}},10000);
   const err=e=>{clearTimeout(loadT);S.mode=e?.code==='permission-denied'?'fehler':'langsam';render()};
-  ['kunden','lektionen','kurse','ausgaben'].forEach(c=>S.unsubs.push(db.collection(c).onSnapshot(sn=>{S[c]=sn.docs.map(d=>({...d.data(),id:d.id}));if(!sn.metadata.fromCache){got.add(c);ok()}render()},err)));
+  ['kunden','lektionen','kurse','ausgaben','blocker'].forEach(c=>S.unsubs.push(db.collection(c).onSnapshot(sn=>{S[c]=sn.docs.map(d=>({...d.data(),id:d.id}));if(!sn.metadata.fromCache){got.add(c);ok()}render()},err)));
   S.unsubs.push(db.doc('config/main').onSnapshot(sn=>{S.cfg={...DEF,...(sn.exists?sn.data():{})};if(!sn.metadata.fromCache){got.add('cfg');ok()}render()},err))}
-function unsubscribe(){S.unsubs.forEach(u=>{try{u()}catch(e){}});S.unsubs=[];clearTimeout(loadT);['kunden','lektionen','kurse','ausgaben'].forEach(c=>S[c]=[]);S.cfg={...DEF}}
+function unsubscribe(){S.unsubs.forEach(u=>{try{u()}catch(e){}});S.unsubs=[];clearTimeout(loadT);['kunden','lektionen','kurse','ausgaben','blocker'].forEach(c=>S[c]=[]);S.cfg={...DEF}}
 
 /* ---------- Auswertungen ---------- */
 function events(){const ev=[];
@@ -346,6 +350,28 @@ const mEditor=(rows,hint)=>`<div class="f"><span>Mietmaterial (pro Person)</span
 const mRead=f=>[...f.querySelectorAll('.mrow')].map(r=>{const o={stil:r.querySelector('[data-act=mStil][aria-pressed=true]')?.dataset.v||'Klassisch'};r.querySelectorAll('[data-m]').forEach(i=>o[i.dataset.m]=i.value.trim());r.querySelectorAll('[data-act=mItem]').forEach(b=>o[b.dataset.k]=b.getAttribute('aria-pressed')==='true');return o});
 const mBad=ms=>ms.some(r=>!MITEM.some(([k])=>r[k]));
 
+const WDS=['So','Mo','Di','Mi','Do','Fr','Sa'];
+const WDH={nie:'Einmalig',taeglich:'Jeden Tag',woechentlich:'Jede Woche'};
+function blocksOn(d){const wd=s2d(d).getDay();return S.blocker.filter(b=>b.datum&&d>=b.datum&&!(b.bisDatum&&d>b.bisDatum)&&(b.wdh==='taeglich'||(b.wdh==='woechentlich'?s2d(b.datum).getDay()===wd:d===b.datum)))}
+function busy(d,ex){const r=[];
+  S.lektionen.forEach(l=>{if(l.datum===d&&l.status!=='abgesagt'&&!isMiete(l)&&l.id!==ex)r.push({von:hm(l.zeit),bis:hm(bisOf(l)),titel:kName(l.kundeId)})});
+  S.kurse.forEach(k=>{if(k.id!==ex)(k.termine||[]).forEach(t=>{if(t.datum===d)r.push({von:hm(t.zeit),bis:hm(bisOf(t)),titel:k.titel})})});
+  blocksOn(d).forEach(b=>r.push({von:hm(b.zeit),bis:hm(b.bis),titel:b.titel||'Blockzeit'}));
+  return r.sort((a,b)=>a.von-b.von)}
+const clash=(d,von,bis,ex)=>busy(d,ex).filter(b=>von<b.bis&&bis>b.von);
+function gaps(d,ex){if(!d||d<today())return [];const A=hm(S.cfg.arbeitVon||'08:30'),B=hm(S.cfg.arbeitBis||'17:00');let t=A;
+  if(d===today()){const n=new Date();t=Math.max(A,Math.ceil((n.getHours()*60+n.getMinutes())/15)*15)}
+  const g=[];busy(d,ex).forEach(b=>{if(b.von>t)g.push([t,Math.min(b.von,B)]);t=Math.max(t,b.bis)});if(t<B)g.push([t,B]);return g.filter(([a,b])=>b-a>=15)}
+function slots(d,dur,ex,max=8){const r=[];gaps(d,ex).forEach(([a,b])=>{const c=[a];for(let h=Math.ceil((a+1)/60)*60;h+dur<=b;h+=60)c.push(h);c.forEach(x=>{if(x+dur<=b&&!r.includes(x))r.push(x)})});return r.sort((a,b)=>a-b).slice(0,max)}
+function frei(f){const box=f.querySelector('#fFrei');if(!box)return;delete f.dataset.ok;if(f.dataset.art==='miete'){box.innerHTML='';return}
+  const d=f.elements.datum.value,von=hm(f.elements.zeit.value),bis=hm(f.elements.bis.value),dur=bis>von?bis-von:60,ex=f.elements.id.value,c=d&&bis>von?clash(d,von,bis,ex):[],sl=slots(d,dur,ex),nx=[];
+  for(let i=1;i<=21&&nx.length<5;i++){const dd=addD(d&&d>today()?d:today(),i),x=slots(dd,dur,ex,1);if(x.length)nx.push([dd,x[0]])}
+  box.innerHTML=`${c.length?`<p class="warn">Überschneidung mit ${c.map(x=>`${esc(x.titel)} (${hmS(x.von)}–${hmS(x.bis)})`).join(', ')}</p>`:d&&bis>von&&d>=today()?'<p class="okay">✓ Zeit ist frei</p>':''}${d>=today()?`<p class="hint" style="margin:6px 0 4px">Frei am ${WDS[s2d(d).getDay()]} ${esc(fDs(d).slice(0,6))} für ${dTxt(dur/60)}</p><div class="chips">${sl.map(x=>`<button type="button" data-act="fSlot" data-d="${d}" data-v="${x}">${hmS(x)}</button>`).join('')||'<span class="hint">Nichts mehr frei.</span>'}</div>`:''}${nx.length?`<p class="hint" style="margin:8px 0 4px">Nächste freie Termine</p><div class="chips">${nx.map(([dd,x])=>`<button type="button" data-act="fSlot" data-d="${dd}" data-v="${x}">${WDS[s2d(dd).getDay()]} ${esc(fDs(dd).slice(0,6))} ${hmS(x)}</button>`).join('')}</div>`:''}`}
+function dayPlan(d){const it=[];events().filter(e=>e.datum===d).forEach(e=>it.push({t:hm(e.zeit),h:evRow(e)}));
+  blocksOn(d).forEach(b=>it.push({t:hm(b.zeit),h:`<button class="ev blk" type="button" data-act="editB" data-id="${b.id}"><span class="tm cond">${esc(b.zeit)}</span><span><b>${esc(b.titel||'Blockzeit')}</b><small>bis ${esc(b.bis)}${b.wdh==='taeglich'?' · jeden Tag':b.wdh==='woechentlich'?' · jede Woche':''}</small></span><span class="ev-r"><span class="chip">blockiert</span></span></button>`}));
+  gaps(d).forEach(([a,b])=>it.push({t:a,f:1,h:`<button class="free" type="button" data-act="newAt" data-d="${d}" data-v="${a}" style="min-height:${Math.round(Math.max(52,Math.min(150,(b-a)*0.5)))}px"><span class="tm cond">${hmS(a)}</span><span><b>frei bis ${hmS(b)}</b><small>${dTxt((b-a)/60)} · antippen für neue Lektion</small></span></button>`}));
+  return it.sort((x,y)=>x.t-y.t||(x.f||0)-(y.f||0)).map(x=>x.h).join('')}
+
 /* ---------- Bausteine ---------- */
 const band=(title,sub,figs)=>`<header class="band"><div class="band-in"><div class="top"><span class="brand">LANGLAUFSPASS.CH${ENV==='test'?'<span class="envtag">TEST</span>':''}</span>${S.user?`<button class="gear" type="button" data-act="settings" aria-label="Einstellungen">${GEAR}</button>`:''}</div><div class="hero"><div><h1>${esc(title)}</h1>${sub?`<p class="sub" id="bsub">${esc(sub)}</p>`:''}</div><img class="logo" src="logo-band.png" alt="" width="560" height="362"></div>${figs?`<div class="figs">${figs.map(f=>`<div class="${f[2]?'pk':''}"><b class="cond">${f[0]}</b><span>${f[1]}</span></div>`).join('')}</div>`:''}</div></header>`;
 const empty=t=>`<p class="empty">${S.mode==='laden'?'Daten werden geladen …':t}</p>`;
@@ -384,7 +410,7 @@ V.kalender=()=>{const m=S.cal||(S.cal=today().slice(0,7)),sel=S.sel||(S.sel=toda
   const ev=events(),by={};ev.forEach(e=>(by[e.datum]=by[e.datum]||[]).push(e));const t=today();let cells='';
   for(let i=0;i<tot;i++){const dd=new Date(y,mo-1,1-off+i),k=iso(dd),es=(by[k]||[]).filter(e=>e.status!=='abgesagt');cells+=`<button type="button" data-act="calDay" data-d="${k}" class="${dd.getMonth()!==mo-1?'out':''}${k===t?' td':''}" aria-pressed="${k===sel}" aria-label="${fD(k)}, ${es.length} Einträge"><span>${dd.getDate()}</span><span class="dots">${es.slice(0,3).map(e=>`<i class="${e.t==='K'?'k':''}"></i>`).join('')}</span></button>`}
   const list=(by[sel]||[]);
-  return band(`${MOL[mo-1]} ${y}`,'')+`<div class="wrap">${statusNote()}<div class="calnav"><button class="btn" type="button" data-act="calMove" data-d="-1" aria-label="Voriger Monat">‹ ${MO[(mo+10)%12]}</button><button class="btn ghost" type="button" data-act="calToday">Heute</button><button class="btn" type="button" data-act="calMove" data-d="1" aria-label="Nächster Monat">${MO[mo%12]} ›</button></div><div class="cal">${['Mo','Di','Mi','Do','Fr','Sa','So'].map(w=>`<span class="wd">${w}</span>`).join('')}${cells}</div><h2 class="day">${fD(sel)}</h2>${list.length?list.map(evRow).join(''):empty('Keine Einträge an diesem Tag.')}${mietBox(sel,'Mietmaterial vorbereiten')}</div>`};
+  return band(`${MOL[mo-1]} ${y}`,'')+`<div class="wrap">${statusNote()}<div class="calnav"><button class="btn" type="button" data-act="calMove" data-d="-1" aria-label="Voriger Monat">‹ ${MO[(mo+10)%12]}</button><button class="btn ghost" type="button" data-act="calToday">Heute</button><button class="btn" type="button" data-act="calMove" data-d="1" aria-label="Nächster Monat">${MO[mo%12]} ›</button></div><div class="cal">${['Mo','Di','Mi','Do','Fr','Sa','So'].map(w=>`<span class="wd">${w}</span>`).join('')}${cells}</div><h2 class="day">${fD(sel)}</h2>${dayPlan(sel)||empty(sel<today()?'Keine Einträge an diesem Tag.':'Ganzer Tag frei.')}<div class="row mt"><button class="btn" type="button" data-act="newB" data-d="${sel}">+ Blockzeit / eigener Termin</button></div>${mietBox(sel,'Mietmaterial vorbereiten')}</div>`};
 function kList(){const q=S.q.trim().toLowerCase(),om={};offen().forEach(o=>om[o.kid]=(om[o.kid]||0)+o.betrag);
   const nt={};S.lektionen.forEach(l=>{if(l.notiz)nt[l.kundeId]=(nt[l.kundeId]||'')+' '+l.notiz});
   const ks=[...S.kunden].sort(byName).filter(k=>!q||[fullName(k),k.ort,k.tel,k.email,k.notiz,nt[k.id]].join(' ').toLowerCase().includes(q));
@@ -457,6 +483,7 @@ function fmL(l){l=l||{};const isNew=!l.id,c=S.cfg,pers=+l.personen||1,von=l.zeit
   <label class="f">Datum<input type="date" name="datum" id="fDatum" value="${l.datum||today()}" required></label>
   <div class="grid2"><label class="f"><span class="only-l">Von</span><span class="only-m">Übergabe um</span><input type="time" name="zeit" id="fZeit" value="${von}" step="300" required></label><label class="f only-l">Bis<input type="time" name="bis" id="fBis" value="${bis}" step="300"></label><div class="f only-m"><span>Tage</span><div class="step"><button type="button" data-act="fTage" data-d="-1" aria-label="Weniger Tage">−</button><output>${tg}</output><button type="button" data-act="fTage" data-d="1" aria-label="Mehr Tage">+</button></div><input type="hidden" name="tage" value="${tg}"></div></div>
   <div class="row only-l" style="margin-top:-6px">${QDUR.map(d=>`<button class="btn sm ghost" type="button" data-act="fDur" data-v="${d}">${dShort(d)}</button>`).join('')}<span class="hint" id="fDurTxt" style="margin:0 0 0 4px">${dTxt(dur)}</span></div>
+  <div id="fFrei" class="only-l"></div>
   <div class="f only-l"><span>Technik</span>${segBtns('technik',TECH,tech)}</div>
   <div class="f only-l"><span>Niveau (optional)</span>${segBtns('niveau',NIV,niv,true)}</div>
   <label class="f only-l">Treffpunkt<select name="treffpunkt" id="fTp">${tpOpts(l.treffpunkt)}</select></label>
@@ -485,10 +512,17 @@ function fmK(k){k=k||{};const tm=(k.termine&&k.termine.length)?k.termine:[{datum
   <label class="f">Notiz<textarea name="notiz" id="fkNotiz" rows="2">${esc(k.notiz||'')}</textarea></label>${saveRow}</form>`}
 function fmT(id,kid){const k=getK(id);if(!k)return null;const p0=kid?(k.teilnehmer||[]).find(x=>x.kundeId===kid):null;if(kid&&!p0)return null;
   const taken=new Set((k.teilnehmer||[]).map(p=>p.kundeId)),pe=+k.preis||0,ma=kMietAdd(k),pers=+p0?.personen||1;
-  return `${shHead(p0?'Teilnehmer bearbeiten':'Teilnehmer anmelden',esc(k.titel))}<form class="fm" data-form="T" data-pe="${pe}" data-madd="${ma}"${p0?.betragManuell?' data-manual="1"':''}><input type="hidden" name="kurs" value="${id}">${p0?`<input type="hidden" name="kundeId" value="${kid}"><input type="hidden" name="edit" value="1"><p style="margin:0;font-size:18px;font-weight:600">${esc(kName(kid))}</p>`:kundeSelect('',taken)}
+  return `${shHead(p0?'Teilnehmer bearbeiten':'Teilnehmer anmelden',esc(k.titel))}<form class="fm" data-form="T" data-tech="${esc(k.technik||'')}" data-pe="${pe}" data-madd="${ma}"${p0?.betragManuell?' data-manual="1"':''}><input type="hidden" name="kurs" value="${id}">${p0?`<input type="hidden" name="kundeId" value="${kid}"><input type="hidden" name="edit" value="1"><p style="margin:0;font-size:18px;font-weight:600">${esc(kName(kid))}</p>`:kundeSelect('',taken)}
   ${mEditor(mList(p0),+k.preisMiete?`Mit Mietmaterial ${chf(k.preisMiete)} statt ${chf(pe)} pro Person.`:`Miete ${chf(ma)} pro Person für den ganzen Kurs.`)}
   <div class="grid2">${stepper(pers)}<label class="f">Betrag CHF<input name="betrag" id="fBetrag" type="number" inputmode="decimal" step="0.05" min="0" value="${(p0?+p0.betrag||0:pe).toFixed(2)}" required></label></div>
   <p class="hint" style="margin-top:-8px"><span id="fCalcTxt"></span> <button class="btn sm ghost" type="button" data-act="fCalc" style="min-height:32px;padding:0 8px">Neu berechnen</button></p>${saveRow}</form>`}
+function fmB(b){b=b||{};return `${shHead(b.id?'Blockzeit bearbeiten':'Blockzeit / eigener Termin')}<form class="fm" data-form="B"><input type="hidden" name="id" value="${b.id||uid()}">
+  <label class="f">Titel<input name="titel" id="fbTitel" value="${esc(b.titel||'')}" placeholder="Mittagessen, Zahnarzt, frei …" required></label>
+  <label class="f">Datum<input type="date" name="datum" id="fbDatum" value="${b.datum||today()}" required></label>
+  <div class="grid2"><label class="f">Von<input type="time" name="zeit" id="fbVon" value="${b.zeit||'12:00'}" step="300" required></label><label class="f">Bis<input type="time" name="bis" id="fbBis" value="${b.bis||'13:00'}" step="300" required></label></div>
+  <div class="f"><span>Wiederholen</span>${segBtns('wdh',Object.values(WDH),WDH[b.wdh||'nie'])}</div>
+  <label class="f">Wiederholen bis (leer = ohne Ende)<input type="date" name="bisDatum" id="fbBisD" value="${b.bisDatum||''}"></label>
+  <p class="hint" style="margin-top:-8px">In dieser Zeit schlägt die App keine Termine vor und warnt bei Überschneidungen.</p>${saveRow}${b.id?`<button class="btn danger" type="button" data-act="delB" data-id="${b.id}">Blockzeit löschen</button>`:''}</form>`}
 function fmA(a){a=a||{};return `${shHead(a.id?'Ausgabe bearbeiten':'Neue Ausgabe')}<form class="fm" data-form="A"><input type="hidden" name="id" value="${a.id||uid()}">
   <div class="grid2"><label class="f">Datum<input type="date" name="datum" id="faDatum" value="${a.datum||today()}" required></label><label class="f">Betrag CHF<input name="betrag" id="faBetrag" type="number" inputmode="decimal" step="0.05" min="0" value="${a.betrag??''}" required></label></div>
   <label class="f">Kategorie<select name="kategorie" id="faKat">${(a.kategorie&&!KAT.includes(a.kategorie)?[a.kategorie,...KAT]:KAT).map(x=>`<option${x===a.kategorie?' selected':''}>${esc(x)}</option>`).join('')}</select></label>
@@ -497,6 +531,8 @@ function fmA(a){a=a||{};return `${shHead(a.id?'Ausgabe bearbeiten':'Neue Ausgabe
 function fmS(){const c=S.cfg,i=(n,l,t='text',x='')=>`<label class="f">${l}<input name="${n}" id="fs_${n}" type="${t}" value="${esc(c[n])}" ${x}></label>`,ta=(n,l,r=3)=>`<label class="f">${l}<textarea name="${n}" id="fs_${n}" rows="${r}">${esc(c[n])}</textarea></label>`;
   return `${shHead('Einstellungen')}<form class="fm" data-form="S">
   <div class="grid2">${i('stundentarif','Tarif pro Stunde (CHF)','number','inputmode="decimal" step="0.05" min="0" required')}${i('zuschlag','Zuschlag je weitere Person / Std','number','inputmode="decimal" step="0.05" min="0"')}</div>
+  <div class="grid2">${i('arbeitVon','Arbeitszeit von','time')}${i('arbeitBis','Arbeitszeit bis','time')}</div>
+  <p class="hint" style="margin-top:-8px">Für freie Zeiten und Terminvorschläge.</p>
   ${i('mietTag','Mietmaterial pro Person und Tag (CHF)','number','inputmode="decimal" step="0.05" min="0"')}
   <div class="f"><span>Treffpunkte, km einfach ab Wohnort und Parkgebühr (der erste ist Standard)</span><div id="tprows">${tps().map(tprow).join('')}</div><button type="button" class="btn ghost" data-act="tpAdd">+ Treffpunkt</button></div>
   <div class="grid2">${i('heimadresse','Wohnort (Start der Fahrten)')}${i('kmAnsatz','Ansatz pro km (CHF)','number','inputmode="decimal" step="0.01" min="0"')}</div>
@@ -522,6 +558,7 @@ const F={};
 F.L=async f=>{const d=Object.fromEntries(new FormData(f));let kid=d.kundeId;if(kid==='__neu'){kid=await newKunde(d);if(!kid)return}if(!kid){toast('Bitte Kunde wählen');return}
   const art=d.art==='miete'?'miete':'lektion',ms=mRead(f);if(mBad(ms)){toast('Pro Person mindestens Ski, Schuhe oder Stöcke wählen');return}if(art==='miete'&&!ms.length){toast('Mindestens eine Person mit Mietmaterial erfassen');return}
   let dur=0.5,bis=hmS(hm(d.zeit)+30);if(art==='lektion'){dur=(hm(d.bis)-hm(d.zeit))/60;bis=d.bis;if(!(dur>0)){toast('«Bis» muss nach «Von» liegen');return}}
+  if(art==='lektion'){const c=clash(d.datum,hm(d.zeit),hm(bis),d.id);if(c.length&&!f.dataset.ok){frei(f);f.dataset.ok='1';toast('Überschneidung mit '+c[0].titel+'. Nochmals «Speichern» tippen, um trotzdem zu speichern.');return}}
   const tage=art==='miete'?Math.max(1,+d.tage||1):1,mb=Math.round(ms.length*(+S.cfg.mietTag||0)*tage*100)/100,L1=art==='lektion';
   const o=getL(d.id)||{};const l={...o,id:d.id,art,kundeId:kid,datum:d.datum,zeit:d.zeit,bis,dauer:Math.round(dur*100)/100,personen:L1?+d.personen:ms.length,tage,miete:ms,mietBetrag:mb,betrag:+d.betrag,betragManuell:f.dataset.manual==='1',technik:L1?d.technik||'':'',niveau:L1?d.niveau||'':'',treffpunkt:L1?d.treffpunkt||tpDef():'',neueFahrt:L1&&d.neueFahrt==='on',notiz:(d.notiz||'').trim(),status:o.status||'geplant',bezahlt:!!o.bezahlt,zahlart:o.zahlart||'',bezahltAm:d.bezahltAm??o.bezahltAm??''};
   if(await put('lektionen',l)){toast(L1?'Lektion gespeichert':'Miete gespeichert');openSheet(()=>shL(l.id),true)}};
@@ -533,6 +570,7 @@ F.K=async f=>{const d=Object.fromEntries(new FormData(f));const o=getK(d.id);con
   const termine=[...f.querySelectorAll('.trow')].map(r=>{const [a,b,c]=r.querySelectorAll('input');const dur=(hm(c.value)-hm(b.value))/60;const m=ot.find(t=>t.datum===a.value&&t.zeit===b.value);return {datum:a.value,zeit:b.value,bis:c.value,dauer:dur>0?Math.round(dur*100)/100:0,da:m?.da?[...m.da]:[]}}).filter(t=>t.datum).sort((a,b)=>(a.datum+a.zeit).localeCompare(b.datum+b.zeit));
   if(!termine.length){toast('Mindestens einen Termin eintragen');return}
   if(termine.some(t=>!(t.dauer>0))){toast('Bei jedem Termin muss «bis» nach «von» liegen');return}
+  {const c=termine.map(t=>[t,clash(t.datum,hm(t.zeit),hm(t.bis),d.id)]).find(x=>x[1].length);if(c&&!f.dataset.ok){f.dataset.ok='1';toast(`Überschneidung am ${fDs(c[0].datum)} mit ${c[1][0].titel}. Nochmals «Speichern» tippen, um trotzdem zu speichern.`);return}}
   const k={...(o?structuredClone(o):{teilnehmer:[]}),id:d.id,titel:d.titel.trim(),preis:+d.preis,preisMiete:+d.preisMiete||0,max:+d.max,technik:d.technik||'',niveau:d.niveau||'',treffpunkt:d.treffpunkt||tpDef(),notiz:(d.notiz||'').trim(),termine};
   if(await put('kurse',k)){toast('Gruppenkurs gespeichert');openSheet(()=>shK(k.id),true)}};
 F.T=async f=>{const d=Object.fromEntries(new FormData(f));let kid=d.kundeId;if(kid==='__neu'){kid=await newKunde(d);if(!kid)return}if(!kid){toast('Bitte Kunde wählen');return}
@@ -540,6 +578,8 @@ F.T=async f=>{const d=Object.fromEntries(new FormData(f));let kid=d.kundeId;if(k
   if(d.edit){if(await updK(k.id,c=>{const t=(c.teilnehmer||[]).find(x=>x.kundeId===kid);if(t)Object.assign(t,{personen:p,betrag:+d.betrag,betragManuell:man,miete:ms})})){toast('Gespeichert');openSheet(()=>shK(k.id),true)}return}
   const besetzt=(k.teilnehmer||[]).filter(x=>!x.warte).reduce((s,x)=>s+(+x.personen||1),0),warte=besetzt+p>(+k.max||0);
   if(await updK(k.id,c=>{c.teilnehmer=c.teilnehmer||[];c.teilnehmer.push({kundeId:kid,personen:p,betrag:+d.betrag,betragManuell:man,miete:ms,bezahlt:false,zahlart:'',bezahltAm:'',warte})})){toast(warte?'Kurs ist voll: auf die Warteliste gesetzt':'Angemeldet');openSheet(()=>shK(k.id),true)}};
+F.B=async f=>{const d=Object.fromEntries(new FormData(f));if(hm(d.bis)<=hm(d.zeit)){toast('«Bis» muss nach «Von» liegen');return}const wdh=Object.keys(WDH).find(k=>WDH[k]===d.wdh)||'nie';
+  if(await put('blocker',{id:d.id,titel:d.titel.trim(),datum:d.datum,zeit:d.zeit,bis:d.bis,wdh,bisDatum:wdh==='nie'?'':d.bisDatum||''})){toast('Blockzeit gespeichert');closeSheet()}};
 F.A=async f=>{const d=Object.fromEntries(new FormData(f));if(await put('ausgaben',{id:d.id,datum:d.datum,betrag:+d.betrag,kategorie:d.kategorie,text:d.text.trim()})){toast('Ausgabe gespeichert');closeSheet()}};
 F.S=async f=>{const d=Object.fromEntries(new FormData(f));const tp=[...f.querySelectorAll('.tprow')].map(r=>({name:r.querySelector('[data-f=name]').value.trim(),km:Math.round((+r.querySelector('[data-f=km]').value||0)*10)/10,park:r.querySelector('[data-f=park]').checked})).filter(x=>x.name);if(!tp.length){toast('Mindestens einen Treffpunkt eintragen');return}
   const c={...S.cfg,...d,treffpunkte:tp,stundentarif:+d.stundentarif||0,zuschlag:+d.zuschlag||0,kmAnsatz:+d.kmAnsatz||0,park4:+d.park4||0,mietTag:+d.mietTag||0,park10:+d.park10||0,parkWoche:+d.parkWoche||0};delete c.treffpunkt;if(await putCfg(c)){toast('Einstellungen gespeichert');closeSheet()}};
@@ -584,12 +624,13 @@ async function seedTest(){const t=today(),d=n=>addD(t,n),T=tps().map(x=>x.name),
   for(const [ki,off,zeit,bis,personen,technik,niveau,tpi,status,za,notiz] of LL){const dauer=(hm(bis)-hm(zeit))/60,miete=ki===0&&off===0?MK:[],mb=miete.length*(+S.cfg.mietTag||0);await put('lektionen',{id:uid(),art:'lektion',kundeId:k[ki].id,datum:d(off),zeit,bis,dauer,personen,tage:1,miete,mietBetrag:mb,betrag:calcB(dauer,personen)+mb,betragManuell:false,technik,niveau,treffpunkt:T[tpi]||T[0],neueFahrt:ki===1&&off===0||zeit==='15:30',notiz,status,bezahlt:!!za,zahlart:za||'',bezahltAm:za?d(off):''})}
   await put('lektionen',{id:uid(),art:'miete',kundeId:k[3].id,datum:d(1),zeit:'09:00',bis:'09:30',dauer:0.5,personen:1,tage:2,miete:[{n:'',stil:'Skating',ski:true,schuhe:true,stoecke:true,cm:'172',kg:'68',schuh:'42'}],mietBetrag:2*(+S.cfg.mietTag||0),betrag:2*(+S.cfg.mietTag||0),betragManuell:false,technik:'',niveau:'',treffpunkt:'',neueFahrt:false,notiz:'Holt das Material bei uns ab',status:'geplant',bezahlt:false,zahlart:'',bezahltAm:''});
   for(const [tech,datum] of [['Klassisch','2026-12-05'],['Skating','2026-12-06']])await put('kurse',{id:uid(),titel:`Fit in den Winter · ${tech} (Test)`,preis:160,preisMiete:190,max:5,technik:tech,niveau:'',treffpunkt:T[0],notiz:'Saisonstart-Kurs. 8.30–10.00 Lektion 1, Kafi-Pause, 10.30–12.00 Lektion 2, Mittagessen, 13.30–15.00 Lektion 3. Inkl. Kafi.',termine:[{datum,zeit:'08:30',bis:'15:00',dauer:6.5,da:[]}],teilnehmer:tech==='Klassisch'?[{kundeId:k[0].id,personen:2,betrag:380,miete:MK,bezahlt:false,zahlart:'',bezahltAm:'',warte:false},{kundeId:k[3].id,personen:1,betrag:160,miete:[],bezahlt:true,zahlart:'TWINT',bezahltAm:d(-1),warte:false}]:[{kundeId:k[2].id,personen:1,betrag:160,miete:[],bezahlt:false,zahlart:'',bezahltAm:'',warte:false}]});
+  await put('blocker',{id:uid(),titel:'Mittagessen (Test)',datum:d(-30),zeit:'12:00',bis:'13:00',wdh:'taeglich',bisDatum:''});
   await put('ausgaben',{id:uid(),datum:d(-5),betrag:48.5,kategorie:'Material & Wachs',text:'Gleitwachs (Test)'});
   await put('ausgaben',{id:uid(),datum:d(-2),betrag:6,kategorie:'Parkgebühren',text:'Parkplatz Einsiedeln (Test)'})}
 
 /* ---------- Oberfläche ---------- */
 function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(e._t);e._t=setTimeout(()=>e.hidden=true,2800)}
-function openSheet(fn,live=false){const h=fn();if(h==null){closeSheet();return}S.sheet={fn,live};$('#shIn').innerHTML=h;{const f=$('#shIn form');if(f&&(f.dataset.form==='L'||f.dataset.form==='T'))recalc(f,true)}$('#sheet').hidden=false;document.body.classList.add('lock');$('.sh-box').scrollTop=0}
+function openSheet(fn,live=false){const h=fn();if(h==null){closeSheet();return}S.sheet={fn,live};$('#shIn').innerHTML=h;{const f=$('#shIn form');if(f&&(f.dataset.form==='L'||f.dataset.form==='T'))recalc(f,true);if(f&&f.dataset.form==='L')frei(f)}$('#sheet').hidden=false;document.body.classList.add('lock');$('.sh-box').scrollTop=0}
 function closeSheet(){S.sheet=null;S.back=null;$('#sheet').hidden=true;document.body.classList.remove('lock')}
 function ask(text,label,fn){S.back=S.sheet;S.confirm=fn;const back=S.back;S.sheet={fn:()=>`${shHead(text)}<div class="row mt"><button class="btn pk" type="button" data-act="yes">${esc(label)}</button><button class="btn ghost" type="button" data-act="no">Abbrechen</button></div>`,live:false};$('#shIn').innerHTML=S.sheet.fn();$('#sheet').hidden=false;S.back=back}
 function render(){const out=!S.user;document.querySelector('nav.tabs').hidden=out;$('#fab').hidden=out;
@@ -612,12 +653,17 @@ const A={
   fDur:b=>{const f=b.closest('form');f.elements.bis.value=hmS(hm(f.elements.zeit.value)+Math.round(+b.dataset.v*60));recalc(f)},
   fCalc:b=>{const f=b.closest('form');delete f.dataset.manual;recalc(f);toast('Betrag neu berechnet')},
   fArt:b=>{const f=b.closest('form');f.dataset.art=b.dataset.v;f.elements.art.value=b.dataset.v;b.parentNode.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));if(b.dataset.v==='miete'&&!f.querySelector('.mrow'))A.mAdd(f.querySelector('[data-act=mAdd]'));else recalc(f)},
-  mAdd:b=>{const f=b.closest('form'),box=f.querySelector('#mrows'),i=box.children.length,kid=f.elements.kundeId?.value,pv=kid&&kid!=='__neu'?lastMiete(kid,f.elements.id?.value)[i]:null,tech=f.elements.technik?.value;box.insertAdjacentHTML('beforeend',mrow(pv?{...pv}:{stil:tech==='Skating'?'Skating':'Klassisch',ski:true,schuhe:true,stoecke:true},i));recalc(f)},
+  mAdd:b=>{const f=b.closest('form'),box=f.querySelector('#mrows'),i=box.children.length,kid=f.elements.kundeId?.value,pv=kid&&kid!=='__neu'?lastMiete(kid,f.elements.id?.value)[i]:null,st=(f.elements.technik?.value||f.dataset.tech)==='Skating'?'Skating':'Klassisch';box.insertAdjacentHTML('beforeend',mrow(pv?{...pv,stil:st}:{stil:st,ski:true,schuhe:true,stoecke:true},i));recalc(f)},
   mDel:b=>{const f=b.closest('form');b.closest('.mrow').remove();recalc(f)},
   mStil:b=>b.parentNode.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)),
   mItem:b=>b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true'),
+  fSlot:b=>{const f=b.closest('form'),v=+b.dataset.v,dur=Math.round((+f.dataset.dur||1)*60);f.elements.datum.value=b.dataset.d;f.elements.zeit.value=hmS(v);f.elements.bis.value=hmS(v+dur);recalc(f);frei(f);const w=f.querySelector('#fNeuWrap');if(w){const n=dayCount(b.dataset.d,f.elements.id.value);w.hidden=!n;if(!n)w.querySelector('input').checked=false}toast(`${WDS[s2d(b.dataset.d).getDay()]} ${fDs(b.dataset.d)}, ${hmS(v)}–${hmS(v+dur)}`)},
+  newAt:b=>{const v=+b.dataset.v;openSheet(()=>fmL({datum:b.dataset.d,zeit:hmS(v),bis:hmS(v+60)}))},
+  newB:b=>openSheet(()=>fmB({datum:b.dataset.d})),
+  editB:b=>openSheet(()=>fmB(S.blocker.find(x=>x.id===b.dataset.id))),
+  delB:b=>ask('Blockzeit löschen? Bei Wiederholung verschwinden alle Tage.','Löschen',()=>drop('blocker',b.dataset.id)),
   tEdit:b=>openSheet(()=>fmT(b.dataset.id,b.dataset.k)),
-  fSeg:b=>{const seg=b.closest('.seg'),inp=seg.nextElementSibling,on=b.getAttribute('aria-pressed')==='true';if(on&&seg.dataset.opt){inp.value='';b.setAttribute('aria-pressed','false');return}inp.value=b.dataset.v;seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))},
+  fSeg:b=>{const seg=b.closest('.seg'),inp=seg.nextElementSibling,on=b.getAttribute('aria-pressed')==='true';if(on&&seg.dataset.opt){inp.value='';b.setAttribute('aria-pressed','false');return}inp.value=b.dataset.v;seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));if(seg.dataset.seg==='technik'&&b.dataset.v!=='Beides')b.closest('form').querySelectorAll('.mrow [data-act=mStil]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===b.dataset.v))},
   tpAdd:()=>$('#tprows').insertAdjacentHTML('beforeend',tprow({name:'',km:''})),
   tpDel:b=>{const r=$('#tprows');if(r.children.length>1)b.closest('.tprow').remove();else toast('Mindestens ein Treffpunkt')},
   no:()=>{const b=S.back;S.confirm=null;b?openSheet(b.fn,b.live):closeSheet()},
@@ -663,12 +709,12 @@ const A={
   csvA:()=>offer(`Ausgaben_${S.year}.csv`,csv([['Datum','Kategorie','Beschreibung','Betrag CHF'],...ausgabenY(S.year).map(a=>[fDs(a.datum),a.kategorie,a.text,(+a.betrag||0).toFixed(2)])])),
   csvF:()=>{const {fa,wk}=fahrten(S.year),a=(+S.cfg.kmAnsatz||0).toFixed(2);offer(`Fahrten_${S.year}.csv`,csv([['Datum','Treffpunkt','km einfach','km hin und zurück','Ansatz CHF/km','Fahrt CHF','Parkiert von','Parkiert bis','Parkgebühr CHF','Bemerkung'],...[...fa.map(x=>({d:x.datum,r:[fDs(x.datum),x.ort,num1(x.km),num1(x.kmHR),a,x.betrag.toFixed(2),x.pflicht?hmS(x.pVon):'',x.pflicht?hmS(x.pBis):'',x.park.toFixed(2),x.wk?'Wochenkarte':'']})),...wk.map(w=>({d:w.von,r:[fDs(w.von),'Wochenkarte Parkieren','','','','0.00','','',w.betrag.toFixed(2),`gültig ${fDs(w.von)} bis ${fDs(w.bis)}`]}))].sort((p,q)=>p.d.localeCompare(q.d)).map(x=>x.r)]))},
   seed:async()=>{if(ENV!=='test')return;closeSheet();await seedTest();toast('Testdaten geladen')},
-  wipe:()=>{if(ENV!=='test')return;ask('Alle Testdaten löschen?','Alles löschen',async()=>{for(const c of ['kunden','lektionen','kurse','ausgaben'])for(const x of [...S[c]])await drop(c,x.id);toast('Testdaten gelöscht')})},
-  backup:()=>offer(`Langlaufspass_Sicherung_${today()}.json`,JSON.stringify({exportiert:new Date().toISOString(),config:S.cfg,kunden:S.kunden,lektionen:S.lektionen,kurse:S.kurse,ausgaben:S.ausgaben},null,1))
+  wipe:()=>{if(ENV!=='test')return;ask('Alle Testdaten löschen?','Alles löschen',async()=>{for(const c of ['kunden','lektionen','kurse','ausgaben','blocker'])for(const x of [...S[c]])await drop(c,x.id);toast('Testdaten gelöscht')})},
+  backup:()=>offer(`Langlaufspass_Sicherung_${today()}.json`,JSON.stringify({exportiert:new Date().toISOString(),config:S.cfg,kunden:S.kunden,lektionen:S.lektionen,kurse:S.kurse,ausgaben:S.ausgaben,blocker:S.blocker},null,1))
 };
 document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const f=A[b.dataset.act];if(f){e.preventDefault();f(b)}});
 document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,h=F[f.dataset.form];if(h)h(f)});
-document.addEventListener('input',e=>{const t=e.target;if(t.id==='kq'){S.q=t.value;$('#klist').innerHTML=kList()}else if(t.id==='fBetrag'&&t.form)t.form.dataset.manual='1';else if(t.id==='fZeit'&&t.form&&t.value){const f=t.form;f.elements.bis.value=hmS(hm(t.value)+Math.round((+f.dataset.dur||1)*60));recalc(f)}else if(t.id==='fBis'&&t.form)recalc(t.form);else if(t.id==='fDatum'&&t.form){const w=t.form.querySelector('#fNeuWrap');if(w){const n=dayCount(t.value,t.form.elements.id.value);w.hidden=!n;if(!n)w.querySelector('input').checked=false}}else if(t.id==='fNkTel'||t.id==='fcTel')telHit(t)});
+document.addEventListener('input',e=>{const t=e.target;if(t.id==='kq'){S.q=t.value;$('#klist').innerHTML=kList()}else if(t.id==='fBetrag'&&t.form)t.form.dataset.manual='1';else if(t.id==='fZeit'&&t.form&&t.value){const f=t.form;f.elements.bis.value=hmS(hm(t.value)+Math.round((+f.dataset.dur||1)*60));recalc(f);frei(f)}else if(t.id==='fBis'&&t.form){recalc(t.form);frei(t.form)}else if(t.id==='fDatum'&&t.form){frei(t.form);const w=t.form.querySelector('#fNeuWrap');if(w){const n=dayCount(t.value,t.form.elements.id.value);w.hidden=!n;if(!n)w.querySelector('input').checked=false}}else if(t.id==='fNkTel'||t.id==='fcTel')telHit(t)});
 document.addEventListener('change',e=>{const t=e.target;if(t.id==='fKunde'){const n=t.form.querySelector('.newk');n.hidden=t.value!=='__neu';const i=t.form.querySelector('#kInfo');if(i)i.innerHTML=kInfo(t.value);if(!n.hidden)t.form.elements.nkVorname.focus()}else if(t.id==='vcf'){importVcf(t.files[0]).catch(()=>toast('Datei konnte nicht gelesen werden')).finally(()=>t.value='')}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.sheet)closeSheet()});
 const MIME={pdf:'application/pdf',csv:'text/csv;charset=utf-8',json:'application/json'};
