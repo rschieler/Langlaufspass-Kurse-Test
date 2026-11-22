@@ -1,0 +1,19 @@
+rules_version = '2';
+
+// Langlaufspass Kurse TEST: nur diese Google-Konten dürfen die Daten lesen und ändern.
+// In der Firebase-Konsole (Projekt langlaufspass-kurse-test) unter Firestore → Regeln veröffentlichen.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function erlaubt() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in [
+          'ronny.schieler@gmail.com',
+          'presidente73@gmail.com'
+        ];
+    }
+    match /{document=**} {
+      allow read, write: if erlaubt();
+    }
+  }
+}
