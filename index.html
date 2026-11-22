@@ -3,53 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0a7fb0">
+<meta name="theme-color" content="#011627">
 <title>Langlaufspass Kurse</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;500;600;700&family=Roboto+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
 /* VOICE everyday work tool for a ski instructor: calm, quick, big touch targets
-   IDEA the day board at the Loipe: times hung large, chalk-clear, nothing extra
-   PICTURE cyan band with the Churfirsten ridge and two loipe tracks running into the list
-   COLOUR snow white ground, deep ink, brand cyan field, brand pink for money and the main action
-   TYPE Barlow Condensed for times and figures + Barlow
-   LAYOUT phone: band, list, fixed tabs and pink button; wider: same column, max 760px centred */
-:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0b1820);--ink:light-dark(#0d2230,#e8f1f5);--mut:light-dark(#566874,#97aab5);--line:light-dark(#e1e8ec,#203542);--surf:light-dark(#f2f7f9,#12232d);--sky:light-dark(#0a7fb0,#0b4f6e);--sky2:light-dark(#4aa9d3,#1b6788);--snow:light-dark(#ffffff,#d3e3ea);--shade:light-dark(#c5e6f3,#9cb8c6);--cy:light-dark(#0a7fb0,#5cc8f0);--cybg:light-dark(#e1f2f9,#0f3346);--pk:light-dark(#d1126c,#ff5aa5);--pkbg:light-dark(#fde6f0,#3a1528)}
+   IDEA the Langlaufspass.ch brand: navy night band with the Churfirsten logo, cyan loipe accent
+   PICTURE the white Churfirsten logo with cyan and pink skaters in the header band
+   COLOUR white ground, navy ink #011627, brand cyan #26cfc8, pink #db1168 for money and actions, Esther-purple #a656ce for group courses
+   TYPE Anton wordmark, Roboto Condensed for titles, times and figures, Montserrat for text (as on langlaufspass.ch)
+   LAYOUT phone: band with title left and logo right, list, fixed tabs and pink button; wider: same column, max 760px centred */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#07121c);--ink:light-dark(#011627,#e9f3f6);--mut:light-dark(#566673,#9aadb8);--line:light-dark(#e2e8ec,#1c2e3b);--surf:light-dark(#f3f7f8,#0f1f2b);--sky:#011627;--brand:#26cfc8;--cy:light-dark(#0b8a85,#4fe3dc);--cybg:light-dark(#dcf6f4,#0d3433);--pk:light-dark(#db1168,#ff4f97);--pkbg:light-dark(#fde5ef,#3a1226);--pu:light-dark(#9447c2,#c89be6);--pubg:light-dark(#f2e8f9,#2c1a3a)}
 :root[data-theme=light]{color-scheme:light}
 :root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
 [hidden]{display:none!important}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Barlow,"Segoe UI",Roboto,Arial,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Montserrat,"Segoe UI",Roboto,Arial,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
 body.lock{overflow:hidden}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
-.cond{font-family:"Barlow Condensed","Arial Narrow",Barlow,sans-serif}
+.cond{font-family:"Roboto Condensed","Arial Narrow",sans-serif}
 a{color:var(--cy)}
 :focus-visible{outline:3px solid var(--cy);outline-offset:2px}
-.band{background:var(--sky);color:#fff;position:relative}
-.band-in{max-width:760px;margin:0 auto;padding:10px 16px 0}
+.band{background:var(--sky);color:#fff;position:relative;border-bottom:5px solid var(--brand)}
+.band-in{max-width:760px;margin:0 auto;padding:8px 16px 16px}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{font-size:20px;font-weight:700;letter-spacing:.01em}
+.brand{font:400 19px/1 Anton,Impact,"Arial Narrow",sans-serif;letter-spacing:.03em}
 .gear{width:44px;height:44px;border:0;border-radius:12px;background:transparent;color:#fff;display:grid;place-items:center}
 .gear svg{width:24px;height:24px}
-h1{font:700 clamp(32px,9vw,46px)/1.05 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:-.01em;margin:6px 0 2px;text-wrap:balance}
-.sub{margin:0;font-size:16px;opacity:.92}
+h1{font:700 clamp(28px,8.4vw,44px)/1.02 "Roboto Condensed","Arial Narrow",sans-serif;text-transform:uppercase;margin:6px 0 2px;text-wrap:balance}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}
+.logo{display:block;width:clamp(128px,34vw,230px);height:auto;margin:4px -6px -6px 0}
+.sub{margin:2px 0 0;font-size:14px;color:#a7f3f0}
 .figs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
-.figs b{display:block;font-size:32px;line-height:1;white-space:nowrap}
-.figs span{font-size:14px;font-weight:500}
+.figs b{display:block;font-size:34px;line-height:1;white-space:nowrap}
+.figs span{font-size:13px;font-weight:500;color:#a7f3f0}
 .figs .pk span{background:var(--pk);color:#fff;padding:1px 7px;border-radius:6px}
 .ridge{display:block;width:100%;height:max(84px,11vw);margin-top:-6px}
 .wrap{max-width:760px;margin:0 auto;padding:0 16px 160px}
-.day{font:600 15px/1.2 Barlow,sans-serif;color:var(--mut);margin:22px 0 4px}
+.day{font:600 14px/1.2 Montserrat,sans-serif;color:var(--mut);margin:22px 0 4px}
 .empty{color:var(--mut);margin:8px 0 4px}
 .ev,.li{display:grid;grid-template-columns:4.2em minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:12px 0;color:var(--ink)}
 .li{grid-template-columns:44px minmax(0,1fr) auto}
 .tm{font-size:30px;font-weight:700;line-height:1;color:var(--cy);white-space:nowrap}
-.ev.k .tm{color:var(--ink)}
+.ev.k .tm{color:var(--pu)}
+.chip.grp{background:var(--pubg);color:var(--pu);border-color:transparent}
 .ev.x b,.ev.x .tm{text-decoration:line-through;color:var(--mut)}
 .ev b,.li b{display:block;font-weight:600;font-size:17px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ev small,.li small,.card small{display:block;color:var(--mut);font-size:14px;line-height:1.35}
@@ -66,7 +69,7 @@ h1{font:700 clamp(32px,9vw,46px)/1.05 "Barlow Condensed","Arial Narrow",sans-ser
 .due span{color:var(--pk);font-size:20px;font-weight:700;white-space:nowrap}
 .note{background:var(--pkbg);border-radius:12px;padding:10px 12px;margin-top:14px;font-size:15px}
 .btn{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:var(--surf);color:var(--ink);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;text-align:center;line-height:1.2}
-.btn.pri{background:var(--sky);border-color:var(--sky);color:#fff}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#011627}
 .btn.pk{background:var(--pk);border-color:var(--pk);color:#fff}
 .btn.ghost{background:none}
 .btn.danger{background:none;color:var(--pk);border-color:transparent}
@@ -81,11 +84,11 @@ h1{font:700 clamp(32px,9vw,46px)/1.05 "Barlow Condensed","Arial Narrow",sans-ser
 .f textarea{resize:vertical;line-height:1.4}
 .seg{display:flex;flex-wrap:wrap;gap:6px}
 .seg button,.chips button{min-height:44px;min-width:52px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:600}
-.seg button[aria-pressed=true],.chips button[aria-pressed=true]{background:var(--sky);border-color:var(--sky);color:#fff}
+.seg button[aria-pressed=true],.chips button[aria-pressed=true]{background:var(--brand);border-color:var(--brand);color:#011627}
 .chips{display:flex;flex-wrap:wrap;gap:6px;grid-column:1/-1;padding:4px 0 6px}
 .step{display:flex;align-items:center;gap:10px}
 .step button{width:46px;height:46px;border-radius:10px;border:1px solid var(--line);background:var(--surf);font-size:22px;line-height:1}
-.step output{font:700 26px/1 "Barlow Condensed",sans-serif;min-width:2ch;text-align:center;color:var(--ink)}
+.step output{font:700 26px/1 "Roboto Condensed","Arial Narrow",sans-serif;min-width:2ch;text-align:center;color:var(--ink)}
 .hint{color:var(--mut);font-size:14px;margin:6px 0 0}
 .search{margin-top:16px}
 .calnav{display:flex;justify-content:space-between;gap:8px;margin-top:14px}
@@ -94,11 +97,11 @@ h1{font:700 clamp(32px,9vw,46px)/1.05 "Barlow Condensed","Arial Narrow",sans-ser
 .cal button{min-height:50px;border:0;border-radius:10px;background:var(--surf);color:var(--ink);display:grid;justify-items:center;align-content:center;gap:4px;font-weight:600;padding:4px 0}
 .cal button.out{opacity:.35}
 .cal button.td{box-shadow:inset 0 0 0 2px var(--cy)}
-.cal button[aria-pressed=true]{background:var(--sky);color:#fff}
+.cal button[aria-pressed=true]{background:var(--brand);color:#011627}
 .dots{display:flex;gap:3px;height:6px}
 .dots i{width:6px;height:6px;border-radius:50%;background:var(--cy)}
-.dots i.k{background:var(--ink)}
-.cal button[aria-pressed=true] .dots i{background:#fff}
+.dots i.k{background:var(--pu)}
+.cal button[aria-pressed=true] .dots i{background:#011627}
 .card{display:grid;gap:6px;width:100%;text-align:left;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin-top:10px}
 .card-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
 .card-h b{font-size:19px;font-weight:600}
@@ -111,9 +114,9 @@ h1{font:700 clamp(32px,9vw,46px)/1.05 "Barlow Condensed","Arial Narrow",sans-ser
 .bar.thin i{background:var(--mut)}
 .big{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5em,1fr));gap:10px;margin-top:16px}
 .big div{background:var(--surf);border-radius:14px;padding:12px 14px;font-size:14px;color:var(--mut);font-weight:500}
-.big b{display:block;font:700 clamp(24px,7vw,32px)/1.1 "Barlow Condensed",sans-serif;color:var(--ink);white-space:nowrap}
+.big b{display:block;font:700 clamp(24px,7vw,32px)/1.1 "Roboto Condensed","Arial Narrow",sans-serif;color:var(--ink);white-space:nowrap}
 .big .pk b{color:var(--pk)}
-.big .main{background:var(--sky);color:#fff;grid-column:1/-1}
+.big .main{background:var(--sky);color:#a7f3f0;grid-column:1/-1;box-shadow:inset 0 -4px 0 var(--brand)}
 .big.three{grid-template-columns:repeat(3,minmax(0,1fr))}
 .big.three b{font-size:26px}
 .big .main b{color:#fff}
@@ -126,7 +129,7 @@ table.t{width:100%;border-collapse:collapse;font-size:15px}
 .t td:last-child{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .t tr.sum td{font-weight:700;border-bottom:0}
 section.s{margin-top:22px}
-section.s h3{font:600 15px/1.2 Barlow,sans-serif;color:var(--mut);margin:0 0 8px}
+section.s h3{font:600 15px/1.2 Montserrat,sans-serif;color:var(--mut);margin:0 0 8px}
 .kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;margin-top:12px;font-size:16px}
 .kv span{color:var(--mut)}
 .kv b{font-weight:600}
@@ -143,7 +146,7 @@ section.s h3{font:600 15px/1.2 Barlow,sans-serif;color:var(--mut);margin:0 0 8px
 .trow input,.trow select{padding:8px}
 .x{width:44px;height:44px;border:0;border-radius:12px;background:var(--surf);color:var(--ink);font-size:22px;line-height:1;flex:none}
 .sh-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.sh-h h2{font:700 30px/1.05 "Barlow Condensed",sans-serif;margin:2px 0 4px;text-wrap:balance}
+.sh-h h2{font:700 30px/1.05 "Roboto Condensed","Arial Narrow",sans-serif;margin:2px 0 4px;text-wrap:balance}
 .sh-h p{margin:0;color:var(--mut)}
 .sheet{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .sheet[hidden]{display:none}
@@ -156,12 +159,12 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--bg);b
 nav.tabs a{display:grid;justify-items:center;gap:1px;padding:8px 0 6px;min-height:58px;color:var(--mut);text-decoration:none;font-size:13px;font-weight:600}
 nav.tabs a[aria-current=page]{color:var(--cy)}
 nav.tabs svg{width:24px;height:24px}
-.fab{position:fixed;right:max(16px,calc(50% - 364px));bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:6;height:56px;padding:0 22px;border:0;border-radius:28px;background:var(--pk);color:#fff;font-size:20px;font-weight:700;box-shadow:0 4px 10px -4px rgba(209,18,108,.7)}
+.fab{text-transform:uppercase;letter-spacing:.02em;position:fixed;right:max(16px,calc(50% - 364px));bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:6;height:56px;padding:0 22px;border:0;border-radius:28px;background:var(--pk);color:#fff;font-size:20px;font-weight:700;box-shadow:0 4px 10px -4px rgba(209,18,108,.7)}
 .fab[hidden]{display:none}
 .toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:30;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;max-width:min(90vw,420px);font-weight:500;text-align:center}
 .toast[hidden]{display:none}
-.env-test{--sky:#b3261e;--sky2:#d9655c}
-.envtag{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:6px;background:#fff;color:#b3261e;font-size:14px;letter-spacing:.04em;vertical-align:2px}
+.env-test{--sky:#7f1414}
+.envtag{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:6px;background:#fff;color:#7f1414;font:400 14px/1.3 Anton,Impact,sans-serif;letter-spacing:.06em;vertical-align:2px}
 @media (max-width:380px){.tm{font-size:26px}.figs b{font-size:28px}}
 </style>
 </head>
@@ -198,7 +201,7 @@ const MOL=['Januar','Februar','März','April','Mai','Juni','Juli','August','Sept
 const S={kunden:[],lektionen:[],kurse:[],ausgaben:[],cfg:{...DEF},view:'heute',cal:null,sel:null,year:new Date().getFullYear(),q:'',sheet:null,back:null,confirm:null,open:{},mode:'laden',drawn:null,user:undefined,unsubs:[]};
 let db=null,dl=null,loadT=null,FB=null;
 const ENV=window.APP_ENV==='test'?'test':'prod';
-if(ENV==='test'){document.documentElement.classList.add('env-test');document.title='LL-Kurse TEST';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#b3261e')}
+if(ENV==='test'){document.documentElement.classList.add('env-test');document.title='LL-Kurse TEST';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#7f1414')}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const enc=encodeURIComponent;
@@ -229,7 +232,6 @@ const wa=(tel,text,label,cls='btn')=>`<a class="${cls}" href="https://wa.me/${wa
 const calcB=(d,p)=>{const c=S.cfg;return Math.round(((+c.stundentarif||0)*d+(+c.zuschlag||0)*Math.max(0,p-1)*d)*20)/20};
 const nextSat=()=>{const d=new Date();d.setDate(d.getDate()+((6-d.getDay()+7)%7||7));return iso(d)};
 function gcal(titel,datum,zeit,dauer,ort,details){const a=s2d(datum);const [h,m]=(zeit||'10:00').split(':').map(Number);a.setHours(h,m,0,0);const b=new Date(a.getTime()+(+dauer||1)*3600e3);const f=d=>`${d.getFullYear()}${p2(d.getMonth()+1)}${p2(d.getDate())}T${p2(d.getHours())}${p2(d.getMinutes())}00`;return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${enc(titel)}&dates=${f(a)}/${f(b)}&ctz=Europe/Zurich&location=${enc(ort||'')}&details=${enc(details||'')}`}
-const RIDGE=`<svg class="ridge" viewBox="0 0 800 96" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><path fill="var(--sky2)" d="M0 96V52l90-12 80 8 70-10 320-2 90 8 80-10 70 8v54z"/><path fill="var(--snow)" d="M0 96V70l120-8 80-4 22-6 38-18 7 22 38-27 7 22 38-26 7 22 38-20 7 22 38-25 7 22 41-28 7 22 40-15 7 22 38 11 80 4 140 4v30z"/>${[[260,34],[305,29],[350,25],[395,27],[440,24],[488,18],[535,25]].map(([x,y])=>`<path fill="var(--shade)" d="M${x} ${y}l7 22-6 16z"/>`).join('')}<path fill="var(--bg)" d="M0 96V84c160-10 300-8 420-2s220 2 380-8v22z"/><path d="M170 96c90-9 190-12 300-12s230-2 330-5M186 96c90-6 186-8 290-8s224-2 324-4" fill="none" stroke="var(--cy)" stroke-width="1.6" opacity=".5"/></svg>`;
 const GEAR=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>`;
 
 /* ---------- Daten ---------- */
@@ -265,12 +267,12 @@ const ausgabenY=y=>S.ausgaben.filter(a=>(a.datum||'').startsWith(String(y))).sor
 const groupSum=(arr,key,keys)=>{const m={};keys.forEach(k=>m[k]=0);arr.forEach(x=>{const k=x[key]||'Diverses';m[k]=(m[k]||0)+(+x.betrag||0)});return Object.entries(m).filter(([,v])=>v)};
 
 /* ---------- Bausteine ---------- */
-const band=(title,sub,figs)=>`<header class="band"><div class="band-in"><div class="top"><span class="brand cond">Langlaufspass${ENV==='test'?'<span class="envtag">TEST</span>':''}</span>${S.user?`<button class="gear" type="button" data-act="settings" aria-label="Einstellungen">${GEAR}</button>`:''}</div><h1>${esc(title)}</h1>${sub?`<p class="sub" id="bsub">${esc(sub)}</p>`:''}${figs?`<div class="figs">${figs.map(f=>`<div class="${f[2]?'pk':''}"><b class="cond">${f[0]}</b><span>${f[1]}</span></div>`).join('')}</div>`:''}</div>${RIDGE}</header>`;
+const band=(title,sub,figs)=>`<header class="band"><div class="band-in"><div class="top"><span class="brand">LANGLAUFSPASS.CH${ENV==='test'?'<span class="envtag">TEST</span>':''}</span>${S.user?`<button class="gear" type="button" data-act="settings" aria-label="Einstellungen">${GEAR}</button>`:''}</div><div class="hero"><div><h1>${esc(title)}</h1>${sub?`<p class="sub" id="bsub">${esc(sub)}</p>`:''}</div><img class="logo" src="logo-band.png" alt="" width="560" height="362"></div>${figs?`<div class="figs">${figs.map(f=>`<div class="${f[2]?'pk':''}"><b class="cond">${f[0]}</b><span>${f[1]}</span></div>`).join('')}</div>`:''}</div></header>`;
 const empty=t=>`<p class="empty">${S.mode==='laden'?'Daten werden geladen …':t}</p>`;
 function statusNote(){if(S.mode==='fehler')return `<div class="note"><p style="margin:0 0 8px">Kein Zugriff auf die Daten mit <b>${esc(S.user?.email||'')}</b>. Diese Adresse ist in den Firestore-Regeln nicht freigeschaltet.</p><button class="btn" type="button" data-act="logout">Mit anderem Konto anmelden</button></div>`;
   const m={langsam:'Keine Verbindung: Du siehst den zuletzt gespeicherten Stand. Änderungen werden übertragen, sobald wieder Netz da ist.'}[S.mode];return m?`<p class="note">${m}</p>`:''}
 function chipL(e){if(e.status==='abgesagt')return '<span class="chip off">abgesagt</span>';if(e.bezahlt)return '<span class="chip paid">bezahlt</span>';if(e.datum<=today())return '<span class="chip open">offen</span>';return '<span class="chip">geplant</span>'}
-const evRow=e=>`<button class="ev${e.t==='K'?' k':''}${e.status==='abgesagt'?' x':''}" type="button" data-act="${e.t==='L'?'openL':'openK'}" data-id="${e.id}"><span class="tm cond">${esc(e.zeit||'')}</span><span><b>${esc(e.titel)}</b><small>${esc(e.sub)}</small></span><span class="ev-r">${e.t==='L'?`<span class="amt cond">${chf(e.betrag)}</span>${chipL(e)}`:'<span class="chip">Gruppe</span>'}</span></button>`;
+const evRow=e=>`<button class="ev${e.t==='K'?' k':''}${e.status==='abgesagt'?' x':''}" type="button" data-act="${e.t==='L'?'openL':'openK'}" data-id="${e.id}"><span class="tm cond">${esc(e.zeit||'')}</span><span><b>${esc(e.titel)}</b><small>${esc(e.sub)}</small></span><span class="ev-r">${e.t==='L'?`<span class="amt cond">${chf(e.betrag)}</span>${chipL(e)}`:'<span class="chip grp">Gruppe</span>'}</span></button>`;
 const shHead=(t,sub)=>`<div class="sh-h"><div><h2>${esc(t)}</h2>${sub?`<p>${sub}</p>`:''}</div><button class="x" type="button" data-act="close" aria-label="Schliessen">×</button></div>`;
 const kundeSelect=(sel,excl)=>`<label class="f">Kunde<select name="kundeId" id="fKunde" required><option value="">Kunde wählen …</option><option value="__neu">+ Neuer Kunde</option>${[...S.kunden].filter(k=>!excl||!excl.has(k.id)).sort(byName).map(k=>`<option value="${k.id}"${k.id===sel?' selected':''}>${esc(k.name)}</option>`).join('')}</select></label><div class="newk" hidden>${canPick()?'<button class="btn" type="button" data-act="pickNew" style="margin-bottom:10px">Aus Kontakten wählen</button>':''}<div class="grid2"><label class="f">Name<input name="nkName" id="fNkName" autocomplete="off"></label><label class="f">Telefon<input name="nkTel" id="fNkTel" type="tel" inputmode="tel"></label></div></div>`;
 const stepper=v=>`<div class="f"><span>Personen</span><div class="step"><button type="button" data-act="fPers" data-d="-1" aria-label="Weniger Personen">−</button><output>${v}</output><button type="button" data-act="fPers" data-d="1" aria-label="Mehr Personen">+</button></div><input type="hidden" name="personen" value="${v}"></div>`;
@@ -290,7 +292,7 @@ V.login=()=>band('Anmelden','Kurse, Kunden und Abrechnung')+`<div class="wrap">$
 V.heute=()=>{const t=today(),d=s2d(t),ev=events(),live=e=>e.status!=='abgesagt';
   const td=ev.filter(e=>e.datum===t),wk=ev.filter(e=>e.datum>=t&&e.datum<=addD(t,6)&&live(e)),nx=ev.filter(e=>e.datum>t&&e.datum<=addD(t,21));
   const op=offen(),os=sum(op);const days=[...new Set(nx.map(e=>e.datum))];
-  return band(`${WDL[d.getDay()]}, ${d.getDate()}. ${MOL[d.getMonth()]}`,'',[[td.filter(live).length,'heute'],[wk.length,'nächste 7 Tage'],[num0(os),'CHF offen',os>0]])+
+  return band(`${d.getDate()}. ${MOL[d.getMonth()]}`,WDL[d.getDay()],[[td.filter(live).length,'heute'],[wk.length,'nächste 7 Tage'],[num0(os),'CHF offen',os>0]])+
   `<div class="wrap">${statusNote()}${op.length?`<a class="due" href="#geld"><b>${op.length} ${op.length===1?'Zahlung':'Zahlungen'} noch offen</b><span class="cond">${chf(os)}</span></a>`:''}<h2 class="day">Heute</h2>${td.length?td.map(evRow).join(''):empty('Heute keine Lektionen.')}<h2 class="day">Nächste 3 Wochen</h2>${days.length?days.map(x=>`<h3 class="day">${fD(x)}</h3>${nx.filter(e=>e.datum===x).map(evRow).join('')}`).join(''):empty('Noch nichts geplant. Mit «+ Lektion» geht es los.')}</div>`};
 V.kalender=()=>{const m=S.cal||(S.cal=today().slice(0,7)),sel=S.sel||(S.sel=today());const [y,mo]=m.split('-').map(Number);
   const first=new Date(y,mo-1,1),off=(first.getDay()+6)%7,tot=Math.ceil((off+new Date(y,mo,0).getDate())/7)*7;
@@ -420,8 +422,9 @@ F.S=async f=>{const d=Object.fromEntries(new FormData(f));const c={...S.cfg,...d
 async function offer(filename,data){if(!dl){toast('Download hier nicht verfügbar');return}try{await dl.save({filename,data})}catch(e){if(e?.code!=='declined')toast('Download nicht möglich ('+(e?.code||'Fehler')+')')}}
 const csv=rows=>'﻿'+rows.map(r=>r.map(v=>{const s=String(v??'');return /[";\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}).join(';')).join('\r\n');
 const fnSafe=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\w-]+/g,'_').replace(/^_|_$/g,'');
-function pdfHead(d,c,title,L){d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(10,127,176);d.text(c.firma||'Langlaufspass.ch',L,16);d.setTextColor(13,34,48);d.setFont('helvetica','normal');d.setFontSize(9);d.text([(c.adresse||'').split('\n').join(', '),c.email].filter(Boolean).join(' · '),L,21);d.setFont('helvetica','bold');d.setFontSize(20);d.text(title,L,34)}
-function pdfQuit(l){const {jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a5'}),c=S.cfg,L=14,R=134;let Y=48;pdfHead(d,c,'Quittung',L);
+let LOGO=null;fetch('logo-print.jpg').then(r=>r.ok?r.blob():null).then(b=>{if(!b)return;const fr=new FileReader();fr.onload=()=>{LOGO=fr.result};fr.readAsDataURL(b)}).catch(()=>{});
+function pdfHead(d,c,title,L,R){if(LOGO){try{d.addImage(LOGO,'JPEG',R-34,7,34,23.5)}catch(e){}}d.setDrawColor(38,207,200);d.setLineWidth(0.8);d.line(L,38,R,38);d.setLineWidth(0.2);d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(1,22,39);d.text(c.firma||'Langlaufspass.ch',L,16);d.setTextColor(13,34,48);d.setFont('helvetica','normal');d.setFontSize(9);d.text([(c.adresse||'').split('\n').join(', '),c.email].filter(Boolean).join(' · '),L,21);d.setFont('helvetica','bold');d.setFontSize(20);d.text(title,L,34)}
+function pdfQuit(l){const {jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a5'}),c=S.cfg,L=14,R=134;let Y=48;pdfHead(d,c,'Quittung',L,R);
   const rows=[['Kunde',kName(l.kundeId)],['Leistung',`Langlauflektion, ${dTxt(l.dauer)}, ${l.personen||1} Pers.`],['Datum',fDs(l.datum)+', '+l.zeit+' Uhr'],['Treffpunkt',l.treffpunkt||c.treffpunkt],['Bezahlt am',`${fDs(l.bezahltAm)} per ${l.zahlart}`]];
   d.setFontSize(11);rows.forEach(([k,v])=>{d.setFont('helvetica','normal');d.setTextColor(86,104,116);d.text(k,L,Y);d.setTextColor(13,34,48);const t=d.splitTextToSize(String(v),R-L-30);d.text(t,L+30,Y);Y+=Math.max(8,t.length*5+3)});
   Y+=4;d.setDrawColor(13,34,48);d.line(L,Y,R,Y);Y+=9;d.setFont('helvetica','bold');d.setFontSize(14);d.text('Betrag',L,Y);d.text('CHF '+num(l.betrag),R,Y,{align:'right'});
@@ -430,7 +433,7 @@ function pdfAbr(y){const {jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a4'
   const ein=einnahmen(y),aus=ausgabenY(y),E=sum(ein),A=sum(aus);
   const fit=(t,w)=>{let s=String(t??'');while(s&&d.getTextWidth(s)>w)s=s.slice(0,-1);return s};
   const nl=h=>{Y+=h;if(Y>277){d.addPage();Y=20}};
-  pdfHead(d,c,`Abrechnung ${y}`,L);d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(86,104,116);d.text(`Zeitraum 01.01.${y} bis 31.12.${y}. Einnahmen nach Datum des Zahlungseingangs.`,L,Y);d.setTextColor(13,34,48);nl(10);
+  pdfHead(d,c,`Abrechnung ${y}`,L,R);d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(86,104,116);d.text(`Zeitraum 01.01.${y} bis 31.12.${y}. Einnahmen nach Datum des Zahlungseingangs.`,L,Y);d.setTextColor(13,34,48);nl(10);
   const kv=(k,v,b,ind)=>{d.setFont('helvetica',b?'bold':'normal');d.text(k,L+(ind?6:0),Y);d.text('CHF '+num(v),R,Y,{align:'right'});nl(6)};
   d.setFontSize(11);kv('Einnahmen total',E,true);groupSum(ein,'zahlart',ZA).forEach(([k,v])=>kv('davon '+k,v,false,true));nl(2);
   kv('Ausgaben total',A,true);groupSum(aus,'kategorie',KAT).forEach(([k,v])=>kv(k,v,false,true));nl(2);d.setDrawColor(13,34,48);d.line(L,Y-4,R,Y-4);nl(1);
