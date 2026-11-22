@@ -91,6 +91,15 @@ h1{font:700 clamp(28px,8.4vw,44px)/1.02 "Roboto Condensed","Arial Narrow",sans-s
 .step output{font:700 26px/1 "Roboto Condensed","Arial Narrow",sans-serif;min-width:2ch;text-align:center;color:var(--ink)}
 .hint{color:var(--mut);font-size:14px;margin:6px 0 0}
 .search{margin-top:16px}
+.calmode{margin-top:14px}.calmode button{flex:1}
+h2.day .btn{margin-left:8px;vertical-align:middle}
+.dg{position:relative;margin-top:4px;border-top:1px solid var(--line)}
+.dg-w{position:absolute;left:52px;right:0;background:var(--surf);border-radius:6px}
+.dg-h{position:absolute;left:0;right:0;border-top:1px solid var(--line);height:0}.dg-h span{position:absolute;top:-9px;left:0;font-size:12px;color:var(--mut);background:var(--bg);padding-right:4px;font-family:'Roboto Condensed',sans-serif}
+.dg-f{position:absolute;left:56px;right:4px;border:1.5px dashed var(--cy);border-radius:8px;background:transparent;color:var(--cy);font:inherit;font-size:13px;font-weight:600;text-align:left;padding:2px 8px;cursor:pointer;display:flex;align-items:flex-start;opacity:.85}
+.dg-e{position:absolute;border:0;border-left:4px solid var(--cy);border-radius:8px;background:var(--cybg);color:var(--ink);font:inherit;text-align:left;padding:3px 6px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;gap:0;line-height:1.2;z-index:1}
+.dg-e b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dg-e small{font-size:12px;color:var(--mut);overflow:hidden}
+.dg-e.k{border-left-color:#A656CE;background:light-dark(#f2e8f8,#2a1a33)}.dg-e.b{border-left-color:var(--mut);background:repeating-linear-gradient(135deg,var(--surf) 0 6px,var(--line) 6px 8px)}.dg-e.m{border-left-color:#DB1168;background:var(--pkbg)}
 .calnav{display:flex;justify-content:space-between;gap:8px;margin-top:14px}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:8px}
 .cal .wd{font-size:13px;color:var(--mut);text-align:center;font-weight:600}
@@ -405,12 +414,30 @@ V.heute=()=>{const t=today(),d=s2d(t),ev=events(),live=e=>e.status!=='abgesagt';
   const op=offen(),os=sum(op);const days=[...new Set(nx.map(e=>e.datum))];
   return band(`${d.getDate()}. ${MOL[d.getMonth()]}`,WDL[d.getDay()],[[td.filter(live).length,'heute'],[wk.length,'nächste 7 Tage'],[num0(os),'CHF offen',os>0]])+
   `<div class="wrap">${statusNote()}${op.length?`<a class="due" href="#geld"><b>${op.length} ${op.length===1?'Zahlung':'Zahlungen'} noch offen</b><span class="cond">${chf(os)}</span></a>`:''}${mietBox(t,'Mietmaterial heute')}${mietBox(addD(t,1),'Mietmaterial morgen')}<h2 class="day">Heute</h2>${td.length?td.map(evRow).join(''):empty('Heute keine Lektionen.')}<h2 class="day">Nächste 3 Wochen</h2>${days.length?days.map(x=>`<h3 class="day">${fD(x)}</h3>${nx.filter(e=>e.datum===x).map(evRow).join('')}`).join(''):empty('Noch nichts geplant. Mit «+ Lektion» geht es los.')}</div>`};
-V.kalender=()=>{const m=S.cal||(S.cal=today().slice(0,7)),sel=S.sel||(S.sel=today());const [y,mo]=m.split('-').map(Number);
+const calSeg=()=>`<div class="seg calmode">${[['tag','Tag'],['monat','Monat']].map(([v,t])=>`<button type="button" data-act="calMode" data-v="${v}" aria-pressed="${(S.calMode||'tag')===v}">${t}</button>`).join('')}</div>`;
+function dayItems(d){const r=[];
+  S.lektionen.forEach(l=>{if(l.datum!==d||l.status==='abgesagt')return;const m=isMiete(l);r.push({von:hm(l.zeit),bis:m?hm(l.zeit)+30:hm(bisOf(l)),cls:m?'m':'l',act:'openL',id:l.id,t:kName(l.kundeId),s:m?'Nur Miete':[l.technik,(+l.personen||1)>1?`${l.personen} Pers.`:'',tpName(l.treffpunkt)].filter(Boolean).join(' · '),z:m?esc(l.zeit):vonBis(l)})});
+  S.kurse.forEach(k=>(k.termine||[]).forEach(t=>{if(t.datum===d)r.push({von:hm(t.zeit),bis:hm(bisOf(t)),cls:'k',act:'openK',id:k.id,t:k.titel,s:tpName(k.treffpunkt),z:vonBis(t)})}));
+  blocksOn(d).forEach(b=>r.push({von:hm(b.zeit),bis:hm(b.bis),cls:'b',act:'editB',id:b.id,t:b.titel||'Blockzeit',s:'blockiert',z:`${b.zeit}–${b.bis}`}));
+  r.sort((a,b)=>a.von-b.von||b.bis-a.bis);
+  let grp=[],end=-1;const fin=()=>{const cols=[];grp.forEach(x=>{let c=cols.findIndex(e=>e<=x.von);if(c<0){c=cols.length;cols.push(0)}cols[c]=x.bis;x.c=c});grp.forEach(x=>x.n=cols.length);grp=[]};
+  r.forEach(x=>{if(x.von>=end&&grp.length)fin();grp.push(x);end=Math.max(end,x.bis)});fin();return r}
+function dayView(){const d=S.sel||(S.sel=today()),dd=s2d(d),it=dayItems(d),A=hm(S.cfg.arbeitVon||'08:30'),B=hm(S.cfg.arbeitBis||'17:00');
+  const st=Math.floor(Math.min(7*60,A-30,...it.map(x=>x.von))/60)*60,en=Math.ceil(Math.max(20*60,B+30,...it.map(x=>x.bis))/60)*60,PX=1.1,y=m=>Math.round((m-st)*PX);
+  const hours=[];for(let h=st;h<=en;h+=60)hours.push(`<div class="dg-h" style="top:${y(h)}px"><span>${hmS(h)}</span></div>`);
+  const fr=gaps(d).map(([a,b])=>`<button class="dg-f" type="button" data-act="newAt" data-d="${d}" data-v="${a}" style="top:${y(a)}px;height:${Math.max(18,y(b)-y(a))}px"><span>frei ${hmS(a)}–${hmS(b)}</span></button>`).join('');
+  const ev=it.map(x=>`<button class="dg-e ${x.cls}" type="button" data-act="${x.act}" data-id="${x.id}" style="top:${y(x.von)}px;height:${Math.max(26,y(x.bis)-y(x.von)-2)}px;left:calc(52px + (100% - 56px) * ${x.c} / ${x.n});width:calc((100% - 56px) / ${x.n} - 3px)"><b>${esc(x.t)}</b><small>${x.z}${x.s?' · '+esc(x.s):''}</small></button>`).join('');
+  const n=it.filter(x=>x.cls!=='b').length,frei=gaps(d).reduce((a,[p,q])=>a+q-p,0);
+  return band(`${WDL[dd.getDay()]}`,`${fD(d)}`)+`<div class="wrap">${statusNote()}${calSeg()}<div class="calnav"><button class="btn" type="button" data-act="dayMove" data-d="-1" aria-label="Vortag">‹ ${WDS[s2d(addD(d,-1)).getDay()]}</button><button class="btn ghost" type="button" data-act="calToday">Heute</button><button class="btn" type="button" data-act="dayMove" data-d="1" aria-label="Nächster Tag">${WDS[s2d(addD(d,1)).getDay()]} ›</button></div>
+  <p class="hint" style="margin:10px 0 6px">${n} ${n===1?'Eintrag':'Einträge'}${d>=today()?` · ${dTxt(frei/60)} frei in der Arbeitszeit`:''}. Freie Zeit antippen für eine neue Lektion.</p>
+  <div class="dg" style="height:${y(en)+8}px"><div class="dg-w" style="top:${y(Math.max(A,st))}px;height:${y(Math.min(B,en))-y(Math.max(A,st))}px"></div>${hours.join('')}${fr}${ev}</div>
+  <div class="row mt"><button class="btn" type="button" data-act="newB" data-d="${d}">+ Blockzeit / eigener Termin</button></div>${mietBox(d,'Mietmaterial vorbereiten')}</div>`}
+V.kalender=()=>{if((S.calMode||'tag')==='tag')return dayView();const m=S.cal||(S.cal=today().slice(0,7)),sel=S.sel||(S.sel=today());const [y,mo]=m.split('-').map(Number);
   const first=new Date(y,mo-1,1),off=(first.getDay()+6)%7,tot=Math.ceil((off+new Date(y,mo,0).getDate())/7)*7;
   const ev=events(),by={};ev.forEach(e=>(by[e.datum]=by[e.datum]||[]).push(e));const t=today();let cells='';
   for(let i=0;i<tot;i++){const dd=new Date(y,mo-1,1-off+i),k=iso(dd),es=(by[k]||[]).filter(e=>e.status!=='abgesagt');cells+=`<button type="button" data-act="calDay" data-d="${k}" class="${dd.getMonth()!==mo-1?'out':''}${k===t?' td':''}" aria-pressed="${k===sel}" aria-label="${fD(k)}, ${es.length} Einträge"><span>${dd.getDate()}</span><span class="dots">${es.slice(0,3).map(e=>`<i class="${e.t==='K'?'k':''}"></i>`).join('')}</span></button>`}
   const list=(by[sel]||[]);
-  return band(`${MOL[mo-1]} ${y}`,'')+`<div class="wrap">${statusNote()}<div class="calnav"><button class="btn" type="button" data-act="calMove" data-d="-1" aria-label="Voriger Monat">‹ ${MO[(mo+10)%12]}</button><button class="btn ghost" type="button" data-act="calToday">Heute</button><button class="btn" type="button" data-act="calMove" data-d="1" aria-label="Nächster Monat">${MO[mo%12]} ›</button></div><div class="cal">${['Mo','Di','Mi','Do','Fr','Sa','So'].map(w=>`<span class="wd">${w}</span>`).join('')}${cells}</div><h2 class="day">${fD(sel)}</h2>${dayPlan(sel)||empty(sel<today()?'Keine Einträge an diesem Tag.':'Ganzer Tag frei.')}<div class="row mt"><button class="btn" type="button" data-act="newB" data-d="${sel}">+ Blockzeit / eigener Termin</button></div>${mietBox(sel,'Mietmaterial vorbereiten')}</div>`};
+  return band(`${MOL[mo-1]} ${y}`,'')+`<div class="wrap">${statusNote()}${calSeg()}<div class="calnav"><button class="btn" type="button" data-act="calMove" data-d="-1" aria-label="Voriger Monat">‹ ${MO[(mo+10)%12]}</button><button class="btn ghost" type="button" data-act="calToday">Heute</button><button class="btn" type="button" data-act="calMove" data-d="1" aria-label="Nächster Monat">${MO[mo%12]} ›</button></div><div class="cal">${['Mo','Di','Mi','Do','Fr','Sa','So'].map(w=>`<span class="wd">${w}</span>`).join('')}${cells}</div><h2 class="day">${fD(sel)} <button class="btn sm ghost" type="button" data-act="calMode" data-v="tag">Tagesansicht</button></h2>${dayPlan(sel)||empty(sel<today()?'Keine Einträge an diesem Tag.':'Ganzer Tag frei.')}<div class="row mt"><button class="btn" type="button" data-act="newB" data-d="${sel}">+ Blockzeit / eigener Termin</button></div>${mietBox(sel,'Mietmaterial vorbereiten')}</div>`};
 function kList(){const q=S.q.trim().toLowerCase(),om={};offen().forEach(o=>om[o.kid]=(om[o.kid]||0)+o.betrag);
   const nt={};S.lektionen.forEach(l=>{if(l.notiz)nt[l.kundeId]=(nt[l.kundeId]||'')+' '+l.notiz});
   const ks=[...S.kunden].sort(byName).filter(k=>!q||[fullName(k),k.ort,k.tel,k.email,k.notiz,nt[k.id]].join(' ').toLowerCase().includes(q));
@@ -545,7 +572,7 @@ function fmS(){const c=S.cfg,i=(n,l,t='text',x='')=>`<label class="f">${l}<input
   <p class="hint">Platzhalter in Nachrichten: {vorname} {datum} {zeit} {bis} {dauer} {treffpunkt} {absender}</p>
   ${ta('tplOk','Nachricht Bestätigung')}${ta('tplErin','Nachricht Erinnerung')}${ta('tplAbs','Nachricht Absage')}${saveRow}</form>
   <section class="s"><h3>Datensicherung</h3>${dl?`<button class="btn" type="button" data-act="backup">Alle Daten sichern (JSON)</button>`:''}<p class="hint">${S.kunden.length} Kunden, ${S.lektionen.length} Lektionen, ${S.kurse.length} Gruppenkurse, ${S.ausgaben.length} Ausgaben, gespeichert in Firebase und auch offline auf diesem Gerät verfügbar.</p></section>
-  ${ENV==='test'?`<section class="s"><h3>Testumgebung</h3><p class="hint" style="margin:0 0 8px">Eigene Testdatenbank, getrennt von den echten Daten.</p><div class="row"><button class="btn" type="button" data-act="seed">Testdaten laden</button><button class="btn danger" type="button" data-act="wipe">Alle Testdaten löschen</button></div></section>`:''}
+  ${ENV==='test'?`<section class="s"><h3>Testumgebung</h3><p class="hint" style="margin:0 0 8px">Eigene Testdatenbank, getrennt von den echten Daten.</p><div class="row"><button class="btn" type="button" data-act="seed">Testdaten neu laden</button><button class="btn danger" type="button" data-act="wipe">Alle Testdaten löschen</button></div></section>`:''}
   <section class="s"><h3>Konto</h3><p style="margin:0 0 8px">Angemeldet als <b>${esc(S.user?.email||'')}</b></p><button class="btn" type="button" data-act="logout">Abmelden</button></section>`}
 function recalc(f,txt){const p=+f.elements.personen.value||1,c=S.cfg,n=f.querySelectorAll('.mrow').length,h=f.querySelector('#fCalcTxt'),man=f.dataset.manual?' · Betrag von Hand':'';
   if(f.dataset.form==='L'){const art=f.dataset.art||'lektion',mt=+c.mietTag||0,tg=art==='miete'?Math.max(1,+f.elements.tage.value||1):1,mb=n*mt*tg;let lb=0,ok=true;
@@ -689,6 +716,8 @@ const A={
   calDay:b=>{S.sel=b.dataset.d;const m=b.dataset.d.slice(0,7);if(m!==S.cal)S.cal=m;render()},
   calMove:b=>{const [y,m]=S.cal.split('-').map(Number);S.cal=iso(new Date(y,m-1+(+b.dataset.d),1)).slice(0,7);render()},
   calToday:()=>{S.cal=today().slice(0,7);S.sel=today();render()},
+  calMode:b=>{S.calMode=b.dataset.v;if(S.sel)S.cal=S.sel.slice(0,7);render();window.scrollTo(0,0)},
+  dayMove:b=>{S.sel=addD(S.sel||today(),+b.dataset.d);S.cal=S.sel.slice(0,7);render()},
   editK:b=>openSheet(()=>fmK(getK(b.dataset.id))),
   delK:b=>{const k=getK(b.dataset.id);if(!k)return;if((k.teilnehmer||[]).some(p=>p.bezahlt)){toast('Kurs hat bezahlte Teilnehmer und bleibt für die Abrechnung erhalten');return}ask(`«${k.titel}» löschen?`,'Löschen',()=>drop('kurse',k.id))},
   tRowAdd:()=>{const rows=$('#trows'),last=rows.lastElementChild,[a,b,c]=last?last.querySelectorAll('input'):[];rows.insertAdjacentHTML('beforeend',trow({datum:a?.value?addD(a.value,7):nextSat(),zeit:b?.value||'10:00',bis:c?.value||'11:30'}))},
@@ -708,7 +737,7 @@ const A={
   csvE:()=>offer(`Einnahmen_${S.year}.csv`,csv([['Zahlungsdatum','Kunde','Leistung','Zahlungsart','Betrag CHF'],...einnahmen(S.year).map(r=>[fDs(r.datum),r.kunde,r.leistung,r.zahlart,r.betrag.toFixed(2)])])),
   csvA:()=>offer(`Ausgaben_${S.year}.csv`,csv([['Datum','Kategorie','Beschreibung','Betrag CHF'],...ausgabenY(S.year).map(a=>[fDs(a.datum),a.kategorie,a.text,(+a.betrag||0).toFixed(2)])])),
   csvF:()=>{const {fa,wk}=fahrten(S.year),a=(+S.cfg.kmAnsatz||0).toFixed(2);offer(`Fahrten_${S.year}.csv`,csv([['Datum','Treffpunkt','km einfach','km hin und zurück','Ansatz CHF/km','Fahrt CHF','Parkiert von','Parkiert bis','Parkgebühr CHF','Bemerkung'],...[...fa.map(x=>({d:x.datum,r:[fDs(x.datum),x.ort,num1(x.km),num1(x.kmHR),a,x.betrag.toFixed(2),x.pflicht?hmS(x.pVon):'',x.pflicht?hmS(x.pBis):'',x.park.toFixed(2),x.wk?'Wochenkarte':'']})),...wk.map(w=>({d:w.von,r:[fDs(w.von),'Wochenkarte Parkieren','','','','0.00','','',w.betrag.toFixed(2),`gültig ${fDs(w.von)} bis ${fDs(w.bis)}`]}))].sort((p,q)=>p.d.localeCompare(q.d)).map(x=>x.r)]))},
-  seed:async()=>{if(ENV!=='test')return;closeSheet();await seedTest();toast('Testdaten geladen')},
+  seed:async()=>{if(ENV!=='test')return;closeSheet();toast('Testdaten werden neu geladen …');for(const c of ['kunden','lektionen','kurse','ausgaben','blocker'])for(const x of [...S[c]])await drop(c,x.id);await seedTest();toast('Testdaten geladen')},
   wipe:()=>{if(ENV!=='test')return;ask('Alle Testdaten löschen?','Alles löschen',async()=>{for(const c of ['kunden','lektionen','kurse','ausgaben','blocker'])for(const x of [...S[c]])await drop(c,x.id);toast('Testdaten gelöscht')})},
   backup:()=>offer(`Langlaufspass_Sicherung_${today()}.json`,JSON.stringify({exportiert:new Date().toISOString(),config:S.cfg,kunden:S.kunden,lektionen:S.lektionen,kurse:S.kurse,ausgaben:S.ausgaben,blocker:S.blocker},null,1))
 };
