@@ -359,8 +359,8 @@ function events(){const ev=[];
   return ev.sort((a,b)=>(a.datum+a.zeit).localeCompare(b.datum+b.zeit))}
 function offen(){const r=[],t=today();
   S.lektionen.forEach(l=>{if(!l.bezahlt&&l.status!=='abgesagt'&&l.datum<=t)r.push({t:'L',id:l.id,kid:l.kundeId,datum:l.datum,titel:kName(l.kundeId),art:isMiete(l)?'Mietmaterial':'Lektion',betrag:+l.betrag||0})});
-  S.kurse.forEach(k=>(k.teilnehmer||[]).forEach(p=>{if(!p.bezahlt&&!p.warte)r.push({t:'K',id:k.id,kid:p.kundeId,datum:(k.termine||[])[0]?.datum||'',titel:kName(p.kundeId),art:k.titel,betrag:+p.betrag||0})}));
-  S.service.forEach(v=>{if(!v.bezahlt&&(v.status==='abgeholt'||v.status==='fertig'||(v.fertig||v.datum)<=t))r.push({t:'S',id:v.id,kid:v.kundeId,datum:v.fertig||v.datum,titel:kName(v.kundeId),art:'Skiservice',betrag:+v.betrag||0})});
+  S.kurse.forEach(k=>{const k0=(k.termine||[])[0]?.datum||'';if(!k0||k0>t)return;(k.teilnehmer||[]).forEach(p=>{if(!p.bezahlt&&!p.warte)r.push({t:'K',id:k.id,kid:p.kundeId,datum:(k.termine||[])[0]?.datum||'',titel:kName(p.kundeId),art:k.titel,betrag:+p.betrag||0})})});
+  S.service.forEach(v=>{if(!v.bezahlt&&(v.status==='abgeholt'||(v.fertig||v.datum)<=t))r.push({t:'S',id:v.id,kid:v.kundeId,datum:v.fertig||v.datum,titel:kName(v.kundeId),art:'Skiservice',betrag:+v.betrag||0})});
   return r.sort((a,b)=>a.datum.localeCompare(b.datum))}
 function einnahmen(y){const r=[],Y=String(y);
   S.lektionen.forEach(l=>{if(l.bezahlt&&l.zahlart!==NV&&(l.bezahltAm||'').startsWith(Y))r.push({datum:l.bezahltAm,kunde:kName(l.kundeId),leistung:isMiete(l)?(l.lang?`Langzeitmiete ${fDs(l.datum)} bis ${fDs(addD(l.datum,(+l.tage||1)-1))}, ${mList(l).length} Pers.`:`Mietmaterial ${fDs(l.datum)}, ${mList(l).length} Pers.${(+l.tage||1)>1?`, ${l.tage} Tage`:''}`):`Lektion ${fDs(l.datum)} ${vonBis(l)}${l.technik?', '+l.technik:''}, ${l.personen||1} Pers.${mList(l).length?`, Miete ${mList(l).length} Pers.`:''}`,zahlart:l.zahlart||'',betrag:+l.betrag||0,miete:isMiete(l)?(+l.betrag||0):Math.min(+l.mietBetrag||0,+l.betrag||0)})});
