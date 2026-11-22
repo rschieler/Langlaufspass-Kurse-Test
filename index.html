@@ -38,7 +38,7 @@ a{color:var(--cy)}
 .gear svg{width:24px;height:24px}
 h1{font:700 clamp(28px,8.4vw,44px)/1.02 "Roboto Condensed","Arial Narrow",sans-serif;text-transform:uppercase;margin:6px 0 2px;text-wrap:balance}
 .hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}
-.logo{display:block;width:clamp(128px,34vw,230px);height:auto;margin:4px -6px -6px 0}
+.logo{display:block;width:clamp(92px,24vw,150px);height:auto;margin:2px -4px -6px 0}
 .sub{margin:2px 0 0;font-size:14px;color:#a7f3f0}
 .figs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
 .figs b{display:block;font-size:34px;line-height:1;white-space:nowrap}
@@ -100,6 +100,10 @@ h2.day .btn{margin-left:8px;vertical-align:middle}
 .dg-e{position:absolute;border:0;border-left:4px solid var(--cy);border-radius:8px;background:var(--cybg);color:var(--ink);font:inherit;text-align:left;padding:3px 6px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;gap:0;line-height:1.2;z-index:1}
 .dg-e b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dg-e small{font-size:12px;color:var(--mut);overflow:hidden}
 .dg-e.k{border-left-color:#A656CE;background:light-dark(#f2e8f8,#2a1a33)}.dg-e.b{border-left-color:var(--mut);background:repeating-linear-gradient(135deg,var(--surf) 0 6px,var(--line) 6px 8px)}.dg-e.m{border-left-color:#DB1168;background:var(--pkbg)}
+.daynav{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:12px}.daynav b{text-align:center;font-size:20px;line-height:1.1}.daynav .btn{padding:0 10px;font-size:15px}
+.calbar{display:flex;gap:8px;align-items:center;margin-top:14px}.calbar .calmode{flex:1;margin-top:0}.calbar .btn[disabled]{opacity:.45}
+.mini{position:fixed;top:0;left:0;right:0;z-index:6;background:var(--sky);color:#fff;border-bottom:3px solid var(--brand);display:flex;align-items:center;gap:10px;padding:calc(6px + env(safe-area-inset-top,0px)) 8px 6px 12px;transform:translateY(-110%);transition:transform .18s ease;visibility:hidden}
+.mini.on{transform:none;visibility:visible}.mini img{width:34px;height:34px;border-radius:8px}.mini span{flex:1;min-width:0;display:flex;flex-direction:column}.mini b{font:700 18px/1.1 "Roboto Condensed",sans-serif;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mini small{font-size:12px;color:#a7f3f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .calnav{display:flex;justify-content:space-between;gap:8px;margin-top:14px}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:8px}
 .cal .wd{font-size:13px;color:var(--mut);text-align:center;font-weight:600}
@@ -204,6 +208,7 @@ nav.tabs svg{width:24px;height:24px}
 </style>
 </head>
 <body>
+<div id="mini" class="mini" aria-hidden="true"></div>
 <main id="main"></main>
 <button id="fab" class="fab cond" data-act="fab" type="button">+ Lektion</button>
 <nav class="tabs" aria-label="Bereiche">
@@ -448,6 +453,8 @@ V.heute=()=>{const t=today(),d=s2d(t),ev=events(),live=e=>e.status!=='abgesagt';
   const op=offen(),os=sum(op);const days=[...new Set(nx.map(e=>e.datum))];
   return band(`${d.getDate()}. ${MOL[d.getMonth()]}`,WDL[d.getDay()],[[td.filter(live).length,'heute'],[wk.length,'nächste 7 Tage'],[num0(os),'CHF offen',os>0]])+
   `<div class="wrap">${statusNote()}${op.length?`<a class="due" href="#geld"><b>${op.length} ${op.length===1?'Zahlung':'Zahlungen'} noch offen</b><span class="cond">${chf(os)}</span></a>`:''}${(n=>n?`<a class="due" href="#miete"><b>${n} Skiservice ${n===1?'Auftrag':'Aufträge'} fällig</b><span class="cond">›</span></a>`:'')(S.service.filter(v=>v.status==='angenommen'&&(v.fertig||v.datum)<=addD(t,1)).length)}${mietBox(t,'Mietmaterial heute')}${mietBox(addD(t,1),'Mietmaterial morgen')}<h2 class="day">Heute</h2>${td.length?td.map(evRow).join(''):empty('Heute keine Lektionen.')}<h2 class="day">Nächste 3 Wochen</h2>${days.length?days.map(x=>`<h3 class="day">${fD(x)}</h3>${nx.filter(e=>e.datum===x).map(evRow).join('')}`).join(''):empty('Noch nichts geplant. Mit «+ Lektion» geht es los.')}</div>`};
+const dNav=(d,act)=>{const a=addD(d,-1),b=addD(d,1),k=x=>`${WDS[s2d(x).getDay()]} ${fDs(x).slice(0,6)}`;return `<div class="daynav"><button class="btn" type="button" data-act="${act}" data-d="-1" aria-label="Vortag">‹ ${k(a)}</button><b class="cond">${fD(d)}</b><button class="btn" type="button" data-act="${act}" data-d="1" aria-label="Nächster Tag">${k(b)} ›</button></div>`};
+const calBar=sel=>`<div class="calbar">${calSeg()}<button class="btn ghost" type="button" data-act="calToday"${sel===today()?' disabled':''}>Heute</button></div>`;
 const calSeg=()=>`<div class="seg calmode">${[['tag','Tag'],['monat','Monat']].map(([v,t])=>`<button type="button" data-act="calMode" data-v="${v}" aria-pressed="${(S.calMode||'tag')===v}">${t}</button>`).join('')}</div>`;
 function dayItems(d){const r=[];
   S.lektionen.forEach(l=>{if(l.datum!==d||l.status==='abgesagt')return;const m=isMiete(l);r.push({von:hm(l.zeit),bis:m?hm(l.zeit)+30:hm(bisOf(l)),cls:m?'m':'l',act:'openL',id:l.id,t:kName(l.kundeId),s:m?'Nur Miete':[l.technik,(+l.personen||1)>1?`${l.personen} Pers.`:'',tpName(l.treffpunkt)].filter(Boolean).join(' · '),z:m?esc(l.zeit):vonBis(l)})});
@@ -462,7 +469,7 @@ function dayView(){const d=S.sel||(S.sel=today()),dd=s2d(d),it=dayItems(d),A=hm(
   const fr=gaps(d).map(([a,b])=>`<button class="dg-f" type="button" data-act="newAt" data-d="${d}" data-v="${a}" style="top:${y(a)}px;height:${Math.max(18,y(b)-y(a))}px"><span>frei ${hmS(a)}–${hmS(b)}</span></button>`).join('');
   const ev=it.map(x=>`<button class="dg-e ${x.cls}" type="button" data-act="${x.act}" data-id="${x.id}" style="top:${y(x.von)}px;height:${Math.max(26,y(x.bis)-y(x.von)-2)}px;left:calc(52px + (100% - 56px) * ${x.c} / ${x.n});width:calc((100% - 56px) / ${x.n} - 3px)"><b>${esc(x.t)}</b><small>${x.z}${x.s?' · '+esc(x.s):''}</small></button>`).join('');
   const n=it.filter(x=>x.cls!=='b').length,frei=gaps(d).reduce((a,[p,q])=>a+q-p,0);
-  return band(`${WDL[dd.getDay()]}`,`${fD(d)}`)+`<div class="wrap">${statusNote()}${calSeg()}<div class="calnav"><button class="btn" type="button" data-act="dayMove" data-d="-1" aria-label="Vortag">‹ ${WDS[s2d(addD(d,-1)).getDay()]}</button><button class="btn ghost" type="button" data-act="calToday">Heute</button><button class="btn" type="button" data-act="dayMove" data-d="1" aria-label="Nächster Tag">${WDS[s2d(addD(d,1)).getDay()]} ›</button></div>
+  return band(`${WDL[dd.getDay()]}`,`${fD(d)}`)+`<div class="wrap">${statusNote()}${calBar(d)}${dNav(d,'dayMove')}
   <p class="hint" style="margin:10px 0 6px">${n} ${n===1?'Eintrag':'Einträge'}${d>=today()?` · ${dTxt(frei/60)} frei in der Arbeitszeit`:''}. Freie Zeit antippen für eine neue Lektion.</p>
   <div class="dg" style="height:${y(en)+8}px"><div class="dg-w" style="top:${y(Math.max(A,st))}px;height:${y(Math.min(B,en))-y(Math.max(A,st))}px"></div>${hours.join('')}${fr}${ev}</div>
   <div class="row mt"><button class="btn" type="button" data-act="newB" data-d="${d}">+ Blockzeit / eigener Termin</button></div>${mietBox(d,'Mietmaterial vorbereiten')}</div>`}
@@ -471,7 +478,7 @@ V.kalender=()=>{if((S.calMode||'tag')==='tag')return dayView();const m=S.cal||(S
   const ev=events(),by={};ev.forEach(e=>(by[e.datum]=by[e.datum]||[]).push(e));const t=today();let cells='';
   for(let i=0;i<tot;i++){const dd=new Date(y,mo-1,1-off+i),k=iso(dd),es=(by[k]||[]).filter(e=>e.status!=='abgesagt');cells+=`<button type="button" data-act="calDay" data-d="${k}" class="${dd.getMonth()!==mo-1?'out':''}${k===t?' td':''}" aria-pressed="${k===sel}" aria-label="${fD(k)}, ${es.length} Einträge"><span>${dd.getDate()}</span><span class="dots">${es.slice(0,3).map(e=>`<i class="${e.t==='K'?'k':''}"></i>`).join('')}</span></button>`}
   const list=(by[sel]||[]);
-  return band(`${MOL[mo-1]} ${y}`,'')+`<div class="wrap">${statusNote()}${calSeg()}<div class="calnav"><button class="btn" type="button" data-act="calMove" data-d="-1" aria-label="Voriger Monat">‹ ${MO[(mo+10)%12]}</button><button class="btn ghost" type="button" data-act="calToday">Heute</button><button class="btn" type="button" data-act="calMove" data-d="1" aria-label="Nächster Monat">${MO[mo%12]} ›</button></div><div class="cal">${['Mo','Di','Mi','Do','Fr','Sa','So'].map(w=>`<span class="wd">${w}</span>`).join('')}${cells}</div><h2 class="day">${fD(sel)} <button class="btn sm ghost" type="button" data-act="calMode" data-v="tag">Tagesansicht</button></h2>${dayPlan(sel)||empty(sel<today()?'Keine Einträge an diesem Tag.':'Ganzer Tag frei.')}<div class="row mt"><button class="btn" type="button" data-act="newB" data-d="${sel}">+ Blockzeit / eigener Termin</button></div>${mietBox(sel,'Mietmaterial vorbereiten')}</div>`};
+  return band(`${MOL[mo-1]} ${y}`,'')+`<div class="wrap">${statusNote()}${calBar(sel)}<div class="daynav"><button class="btn" type="button" data-act="calMove" data-d="-1" aria-label="Voriger Monat">‹ ${MO[(mo+10)%12]}</button><b class="cond">${MOL[mo-1]} ${y}</b><button class="btn" type="button" data-act="calMove" data-d="1" aria-label="Nächster Monat">${MO[mo%12]} ›</button></div><div class="cal">${['Mo','Di','Mi','Do','Fr','Sa','So'].map(w=>`<span class="wd">${w}</span>`).join('')}${cells}</div><h2 class="day">${fD(sel)} <button class="btn sm ghost" type="button" data-act="calMode" data-v="tag">Tagesansicht</button></h2>${dayPlan(sel)||empty(sel<today()?'Keine Einträge an diesem Tag.':'Ganzer Tag frei.')}<div class="row mt"><button class="btn" type="button" data-act="newB" data-d="${sel}">+ Blockzeit / eigener Termin</button></div>${mietBox(sel,'Mietmaterial vorbereiten')}</div>`};
 function kList(){const q=S.q.trim().toLowerCase(),om={};offen().forEach(o=>om[o.kid]=(om[o.kid]||0)+o.betrag);
   const nt={};S.lektionen.forEach(l=>{if(l.notiz)nt[l.kundeId]=(nt[l.kundeId]||'')+' '+l.notiz});
   const ks=[...S.kunden].sort(byName).filter(k=>!q||[fullName(k),k.ort,k.tel,k.email,k.notiz,nt[k.id]].join(' ').toLowerCase().includes(q));
@@ -493,7 +500,7 @@ V.miete=()=>{const d=S.mDay||(S.mDay=today()),act=S.material.filter(m=>m.aktiv!=
   const sv=S.service.filter(v=>v.status!=='abgeholt'||!v.bezahlt).sort((a,b)=>(a.fertig||a.datum).localeCompare(b.fertig||b.datum));
   const svRow=v=>`<button class="ev" type="button" data-act="openS" data-id="${v.id}"><span class="tm cond" style="font-size:20px">${esc(fDs(v.fertig||v.datum).slice(0,6))}</span><span><b>${esc(kName(v.kundeId))}</b><small>${v.paare||1} Paar · ${esc((v.leistungen||[]).join(', '))}</small></span><span class="ev-r"><span class="amt cond">${chf(v.betrag)}</span><span class="chip${v.status==='fertig'?' paid':v.status==='abgeholt'?' open':''}">${v.status==='abgeholt'?'nicht bezahlt':esc(v.status||'angenommen')}</span></span></button>`;
   const inv=order.map(k=>{const [t,st]=k.split('|');return `<h3 class="day">${mTyp(t)} ${esc(st)}</h3>${grp[k].sort((a,b)=>(+a.groesse||0)-(+b.groesse||0)).map(m=>{const u=matUse(m.id,d),n=+m.anzahl||1;return `<button class="li" type="button" data-act="editM" data-id="${m.id}"><span class="av cond">${m.foto?`<img src="${m.foto}" alt="">`:esc(String(m.groesse||''))}</span><span><b>${esc(matLabel(m))}</b><small>${[n>1?n+' Stück':'',m.aktiv===false?'nicht verfügbar':'',m.notiz||''].filter(Boolean).map(esc).join(' · ')||'&nbsp;'}</small></span><span class="ev-r">${m.aktiv===false?'':u>=n?'<span class="chip open">vergeben</span>':u?`<span class="chip">${n-u} frei</span>`:'<span class="chip paid">frei</span>'}</span></button>`}).join('')}`}).join('');
-  return band('Miete & Service',fD(d))+`<div class="wrap">${statusNote()}<div class="calnav"><button class="btn" type="button" data-act="mDayMove" data-d="-1">‹ ${WDS[s2d(addD(d,-1)).getDay()]}</button><button class="btn ghost" type="button" data-act="mDayGo" data-d="${today()}">Heute</button><button class="btn" type="button" data-act="mDayMove" data-d="1">${WDS[s2d(addD(d,1)).getDay()]} ›</button></div>
+  return band('Miete & Service',fD(d))+`<div class="wrap">${statusNote()}${dNav(d,'mDayMove')}${d!==today()?`<div class="row" style="justify-content:center;margin-top:6px"><button class="btn sm ghost" type="button" data-act="mDayGo" data-d="${today()}">Zurück zu heute</button></div>`:''}
   <section class="s"><h3>Material am ${esc(fDs(d))}</h3>${sumRows?`<table class="t"><tbody>${sumRows}</tbody></table>`:empty('Noch kein Mietmaterial erfasst. Unten mit «+ Material» erfassen.')}${ohne&&act.length?`<p class="warn">${ohne} ${ohne===1?'Teil':'Teile'} noch nicht zugeteilt. In der Miete das passende Material wählen.</p>`:''}</section>
   ${mietBox(d,'Vermietet')||`<p class="hint">Am ${esc(fDs(d))} nichts vermietet.</p>`}
   ${nx.length?`<section class="s"><h3>Nächste Mieten</h3><div class="chips">${nx.map(([dd,n])=>`<button type="button" data-act="mDayGo" data-d="${dd}" aria-pressed="${dd===d}">${WDS[s2d(dd).getDay()]} ${esc(fDs(dd).slice(0,6))} · ${n}</button>`).join('')}</div></section>`:''}
@@ -751,7 +758,7 @@ function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeou
 function openSheet(fn,live=false){const h=fn();if(h==null){closeSheet();return}S.sheet={fn,live};$('#shIn').innerHTML=h;{const f=$('#shIn form');if(f&&['L','T','SV'].includes(f.dataset.form))recalc(f,true);if(f&&f.dataset.form==='L')frei(f);if(f&&(f.dataset.form==='L'||f.dataset.form==='T'))mAssign(f)}$('#sheet').hidden=false;document.body.classList.add('lock');$('.sh-box').scrollTop=0}
 function closeSheet(){S.sheet=null;S.back=null;$('#sheet').hidden=true;document.body.classList.remove('lock')}
 function ask(text,label,fn){S.back=S.sheet;S.confirm=fn;const back=S.back;S.sheet={fn:()=>`${shHead(text)}<div class="row mt"><button class="btn pk" type="button" data-act="yes">${esc(label)}</button><button class="btn ghost" type="button" data-act="no">Abbrechen</button></div>`,live:false};$('#shIn').innerHTML=S.sheet.fn();$('#sheet').hidden=false;S.back=back}
-function render(){const out=!S.user;document.querySelector('nav.tabs').hidden=out;$('#fab').hidden=out;
+function render(){setTimeout(miniUpd,0);const out=!S.user;document.querySelector('nav.tabs').hidden=out;$('#fab').hidden=out;
   if(out){$('#main').innerHTML=V.login();S.drawn='login';if(S.sheet)closeSheet();return}
   const v=S.view;
   if(v==='kunden'&&S.drawn==='kunden'&&$('#klist')){$('#klist').innerHTML=kList();const b=$('#bsub');if(b)b.textContent=`${S.kunden.length} ${S.kunden.length===1?'Kunde':'Kunden'}`}
@@ -858,6 +865,8 @@ document.addEventListener('change',e=>{const t=e.target;if(t.id==='fmFotoIn'){fo
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.sheet)closeSheet()});
 const MIME={pdf:'application/pdf',csv:'text/csv;charset=utf-8',json:'application/json'};
 dl={save:async({filename,data})=>{const blob=data instanceof Blob?data:new Blob([data],{type:MIME[filename.split('.').pop()]||'application/octet-stream'});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);return {status:'saved'}}};
+function miniUpd(){const m=$('#mini'),b=document.querySelector('.band');if(!m)return;const on=!!(b&&S.user&&scrollY>b.offsetHeight-56);if(on){const t=b.querySelector('h1')?.textContent||'',u=b.querySelector('.sub')?.textContent||'',h=`<img src="icon-192.png" alt=""><span><b>${esc(t)}</b>${u?`<small>${esc(u)}</small>`:''}</span><button class="gear" type="button" data-act="settings" aria-label="Einstellungen">${GEAR}</button>`;if(m.dataset.h!==h){m.innerHTML=h;m.dataset.h=h}}m.classList.toggle('on',on)}
+addEventListener('scroll',miniUpd,{passive:true});
 addEventListener('hashchange',route);
 route();
 function boot(){const cfg=window.FIREBASE_CONFIG;
