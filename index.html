@@ -144,6 +144,11 @@ section.s h3{font:600 15px/1.2 Montserrat,sans-serif;color:var(--mut);margin:0 0
 .tn small{display:block;color:var(--mut);font-size:14px}
 .trow{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr) 44px;gap:6px;margin-bottom:6px}
 .trow input,.trow select{padding:8px}
+.tprow{display:grid;grid-template-columns:5.5em auto minmax(0,1fr) 44px;gap:6px;margin-bottom:12px;align-items:center}
+.tprow [data-f=name]{grid-column:1/4;grid-row:1}.tprow .x{grid-column:4;grid-row:1}.tprow [data-f=km]{grid-row:2}.tprow a{grid-row:2;grid-column:3;justify-self:start}.tprow span{grid-row:2;color:var(--mut);font-size:14px}
+.tprow input{font-size:16px;min-height:46px;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);width:100%}
+details summary{cursor:pointer;color:var(--cy);font-weight:600;min-height:44px;display:flex;align-items:center}
+.kv small.hint{display:inline;margin:0 0 0 6px}
 .x{width:44px;height:44px;border:0;border-radius:12px;background:var(--surf);color:var(--ink);font-size:22px;line-height:1;flex:none}
 .sh-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .sh-h h2{font:700 30px/1.05 "Roboto Condensed","Arial Narrow",sans-serif;margin:2px 0 4px;text-wrap:balance}
@@ -185,15 +190,15 @@ nav.tabs svg{width:24px;height:24px}
 <script type="module" src="firebase.js"></script>
 <script>
 {
-const DEF={stundentarif:60,zuschlag:0,treffpunkt:'Sennenstube, Flumserberg',absender:'Esther',firma:'Langlaufspass.ch',adresse:'',email:'info@langlaufspass.ch',
-tplOk:'Hallo {name}, gerne bestätige ich deine Langlauflektion am {datum} um {zeit} Uhr ({dauer}). Treffpunkt: {treffpunkt}. Ich freue mich! {absender}, Langlaufspass.ch',
-tplErin:'Hallo {name}, kurze Erinnerung an die Langlauflektion am {datum} um {zeit} Uhr. Treffpunkt: {treffpunkt}. Bis bald! {absender}',
-tplAbs:'Hallo {name}, leider muss ich die Lektion am {datum} um {zeit} Uhr wegen der Verhältnisse absagen. Ich melde mich für einen neuen Termin. {absender}'};
+const DEF={stundentarif:60,zuschlag:0,treffpunkte:[{name:'Flumserberg Sennenstube',km:14.1},{name:'Flumserberg Prodalp',km:16.7},{name:'Einsiedeln Trachslau Loipe',km:67.6},{name:'Einsiedeln Schwedentritt Loipe',km:67.4}],heimadresse:'Pfrundwingertstrasse 5, 8893 Flums Hochwiese',kmAnsatz:0.75,absender:'Esther',firma:'Langlaufspass.ch',adresse:'',email:'info@langlaufspass.ch',
+tplOk:'Hallo {vorname}, gerne bestätige ich deine Langlauflektion am {datum} von {zeit} bis {bis} Uhr. Treffpunkt: {treffpunkt}. Ich freue mich! {absender}, Langlaufspass.ch',
+tplErin:'Hallo {vorname}, kurze Erinnerung an die Langlauflektion am {datum} um {zeit} Uhr. Treffpunkt: {treffpunkt}. Bis bald! {absender}',
+tplAbs:'Hallo {vorname}, leider muss ich die Lektion am {datum} um {zeit} Uhr wegen der Verhältnisse absagen. Ich melde mich für einen neuen Termin. {absender}'};
 const ZA=['Bar','TWINT','Überweisung'];
-const KAT=['Fahrtkosten','Material & Wachs','Mietmaterial','Weiterbildung','Versicherung','Werbung & Website','Telefon','Diverses'];
+const KAT=['Parkgebühren & ÖV','Material & Wachs','Mietmaterial','Weiterbildung','Versicherung','Werbung & Website','Telefon','Diverses'];
 const NIV=['Einsteiger','Fortgeschritten','Sportlich'];
 const TECH=['Klassisch','Skating','Beides'];
-const DAUER=[0.5,1,1.5,2,2.5,3];
+const DAUER=[0.5,1,1.5,2,2.5,3],QDUR=[1,1.5,2];
 const VIEWS=['heute','kalender','kunden','kurse','geld'];
 const WD=['So','Mo','Di','Mi','Do','Fr','Sa'],WDL=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 const MO=['Jan.','Feb.','März','Apr.','Mai','Juni','Juli','Aug.','Sept.','Okt.','Nov.','Dez.'];
@@ -221,8 +226,9 @@ const dTxt=h=>{const m=Math.round((+h||0)*60);if(m<60)return m+' Min';const H=Ma
 const dShort=h=>h===0.5?'30 Min':(Math.floor(h)+(h%1?'½':'')+' Std');
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const kun=id=>S.kunden.find(k=>k.id===id);
-const kName=id=>kun(id)?.name||'Unbekannt';
-const byName=(a,b)=>(a.name||'').localeCompare(b.name||'','de');
+const kName=id=>fullName(kun(id))||'Unbekannt';
+const sk=k=>((k.nachname||String(k.name||'').split(/\s+/).slice(-1)[0]||'')+' '+(k.vorname||k.name||'')).toLowerCase();
+const byName=(a,b)=>sk(a).localeCompare(sk(b),'de');
 const getL=id=>S.lektionen.find(x=>x.id===id);
 const getK=id=>S.kurse.find(x=>x.id===id);
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
@@ -231,6 +237,25 @@ const waNum=t=>{let d=String(t||'').replace(/[^\d+]/g,'');if(d.startsWith('+'))d
 const wa=(tel,text,label,cls='btn')=>`<a class="${cls}" href="https://wa.me/${waNum(tel)}?text=${enc(text)}" target="_blank" rel="noopener">${esc(label)}</a>`;
 const calcB=(d,p)=>{const c=S.cfg;return Math.round(((+c.stundentarif||0)*d+(+c.zuschlag||0)*Math.max(0,p-1)*d)*20)/20};
 const nextSat=()=>{const d=new Date();d.setDate(d.getDate()+((6-d.getDay()+7)%7||7));return iso(d)};
+const num1=n=>(Math.round((+n||0)*10)/10).toFixed(1);
+const tps=()=>Array.isArray(S.cfg.treffpunkte)&&S.cfg.treffpunkte.length?S.cfg.treffpunkte:DEF.treffpunkte;
+const tpDef=()=>tps()[0].name;
+const tpName=v=>v||tpDef();
+const tpKm=n=>{const t=tps().find(x=>x.name===n);return t?(+t.km||0):0};
+const tpOpts=sel=>{const l=tps().map(t=>t.name),v=sel||l[0];return (l.includes(v)?l:[...l,v]).map(n=>`<option${n===v?' selected':''}>${esc(n)}</option>`).join('')};
+const hm=s=>{const [h,m]=String(s||'0:0').split(':').map(Number);return (h||0)*60+(m||0)};
+const hmS=m=>`${p2(Math.floor(m/60)%24)}:${p2(m%60)}`;
+const bisOf=x=>x.bis||hmS(hm(x.zeit)+Math.round((+x.dauer||1)*60));
+const vonBis=x=>`${x.zeit||''}–${bisOf(x)}`;
+const fullName=k=>k?([k.vorname,k.nachname].filter(Boolean).join(' ')||k.name||''):'';
+const vorname=k=>k?(k.vorname||String(k.name||'').split(/\s+/)[0]||''):'';
+const splitName=n=>{const p=String(n||'').trim().split(/\s+/).filter(Boolean);return p.length>1?{vorname:p.slice(0,-1).join(' '),nachname:p[p.length-1]}:{vorname:p[0]||'',nachname:''}};
+const lekVon=kid=>S.lektionen.filter(l=>l.kundeId===kid&&l.status!=='abgesagt');
+const kursAnz=kid=>lekVon(kid).length+S.kurse.filter(c=>(c.teilnehmer||[]).some(p=>p.kundeId===kid&&!p.warte)).length;
+const lekNr=l=>lekVon(l.kundeId).filter(x=>(x.datum+x.zeit)<=(l.datum+l.zeit)).length;
+const telKey=t=>{const n=waNum(t);return n.length>=9?n.slice(-9):''};
+const kByTel=(t,not)=>{const k=telKey(t);return k?S.kunden.find(x=>x.id!==not&&telKey(x.tel)===k):null};
+const segBtns=(name,opts,val,optional)=>`<div class="seg" data-seg="${name}"${optional?' data-opt="1"':''}>${opts.map(o=>`<button type="button" data-act="fSeg" data-v="${esc(o)}" aria-pressed="${o===val}">${esc(o)}</button>`).join('')}</div><input type="hidden" name="${name}" value="${esc(val||'')}">`;
 function gcal(titel,datum,zeit,dauer,ort,details){const a=s2d(datum);const [h,m]=(zeit||'10:00').split(':').map(Number);a.setHours(h,m,0,0);const b=new Date(a.getTime()+(+dauer||1)*3600e3);const f=d=>`${d.getFullYear()}${p2(d.getMonth()+1)}${p2(d.getDate())}T${p2(d.getHours())}${p2(d.getMinutes())}00`;return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${enc(titel)}&dates=${f(a)}/${f(b)}&ctz=Europe/Zurich&location=${enc(ort||'')}&details=${enc(details||'')}`}
 const GEAR=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>`;
 
@@ -238,6 +263,7 @@ const GEAR=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
 function fail(e){const c=e?.code;toast(c==='invalid_argument'?'Keine Berechtigung zum Speichern':c==='quota_exceeded'?'Speicher voll':'Speichern fehlgeschlagen, bitte nochmals')}
 async function put(col,obj){const {id,...data}=obj;
   if(!db){const a=S[col];const i=a.findIndex(x=>x.id===id);if(i>=0)a[i]=obj;else a.push(obj);render();return true}
+  {const a=S[col];const i=a.findIndex(x=>x.id===id);if(i>=0)a[i]=obj;else a.push(obj)}
   try{await db.collection(col).doc(id).set(data);return true}catch(e){fail(e);return false}}
 async function drop(col,id){if(!db){S[col]=S[col].filter(x=>x.id!==id);render();return}try{await db.collection(col).doc(id).delete()}catch(e){fail(e)}}
 async function putCfg(c){if(!db){S.cfg={...DEF,...c};render();return true}try{await db.doc('config/main').set(c);return true}catch(e){fail(e);return false}}
@@ -252,18 +278,23 @@ function unsubscribe(){S.unsubs.forEach(u=>{try{u()}catch(e){}});S.unsubs=[];cle
 
 /* ---------- Auswertungen ---------- */
 function events(){const ev=[];
-  S.lektionen.forEach(l=>{const tp=l.treffpunkt&&l.treffpunkt!==S.cfg.treffpunkt?' · '+l.treffpunkt:'';ev.push({t:'L',id:l.id,datum:l.datum,zeit:l.zeit,status:l.status||'geplant',bezahlt:l.bezahlt,betrag:l.betrag,titel:kName(l.kundeId),sub:`${dTxt(l.dauer)} · ${l.personen||1} Pers.${tp}`})});
-  S.kurse.forEach(k=>{const tn=(k.teilnehmer||[]).filter(t=>!t.warte);const p=tn.reduce((s,t)=>s+(+t.personen||1),0);const n=(k.termine||[]).length;(k.termine||[]).forEach((t,i)=>ev.push({t:'K',id:k.id,datum:t.datum,zeit:t.zeit,status:'',titel:k.titel,sub:`Gruppenkurs · Termin ${i+1} von ${n} · ${p} Pers.`}))});
+  S.lektionen.forEach(l=>{const tp=tpName(l.treffpunkt),p=+l.personen||1,nr=l.status==='abgesagt'?0:lekNr(l);ev.push({t:'L',id:l.id,datum:l.datum,zeit:l.zeit,status:l.status||'geplant',bezahlt:l.bezahlt,betrag:l.betrag,titel:kName(l.kundeId),sub:[`bis ${bisOf(l)}`,l.technik,nr?`${nr}. Lektion`:'',p>1?`${p} Pers.`:'',tp!==tpDef()?tp:''].filter(Boolean).join(' · ')})});
+  S.kurse.forEach(k=>{const tn=(k.teilnehmer||[]).filter(t=>!t.warte);const p=tn.reduce((s,t)=>s+(+t.personen||1),0);const n=(k.termine||[]).length;(k.termine||[]).forEach((t,i)=>ev.push({t:'K',id:k.id,datum:t.datum,zeit:t.zeit,status:'',titel:k.titel,sub:[`bis ${bisOf(t)}`,`Termin ${i+1} von ${n}`,k.technik,`${p} Pers.`].filter(Boolean).join(' · ')}))});
   return ev.sort((a,b)=>(a.datum+a.zeit).localeCompare(b.datum+b.zeit))}
 function offen(){const r=[],t=today();
   S.lektionen.forEach(l=>{if(!l.bezahlt&&l.status!=='abgesagt'&&l.datum<=t)r.push({t:'L',id:l.id,kid:l.kundeId,datum:l.datum,titel:kName(l.kundeId),art:'Lektion',betrag:+l.betrag||0})});
   S.kurse.forEach(k=>(k.teilnehmer||[]).forEach(p=>{if(!p.bezahlt&&!p.warte)r.push({t:'K',id:k.id,kid:p.kundeId,datum:(k.termine||[])[0]?.datum||'',titel:kName(p.kundeId),art:k.titel,betrag:+p.betrag||0})}));
   return r.sort((a,b)=>a.datum.localeCompare(b.datum))}
 function einnahmen(y){const r=[],Y=String(y);
-  S.lektionen.forEach(l=>{if(l.bezahlt&&(l.bezahltAm||'').startsWith(Y))r.push({datum:l.bezahltAm,kunde:kName(l.kundeId),leistung:`Lektion ${fDs(l.datum)}, ${dTxt(l.dauer)}, ${l.personen||1} Pers.`,zahlart:l.zahlart||'',betrag:+l.betrag||0})});
+  S.lektionen.forEach(l=>{if(l.bezahlt&&(l.bezahltAm||'').startsWith(Y))r.push({datum:l.bezahltAm,kunde:kName(l.kundeId),leistung:`Lektion ${fDs(l.datum)} ${vonBis(l)}${l.technik?', '+l.technik:''}, ${l.personen||1} Pers.`,zahlart:l.zahlart||'',betrag:+l.betrag||0})});
   S.kurse.forEach(k=>(k.teilnehmer||[]).forEach(p=>{if(p.bezahlt&&(p.bezahltAm||'').startsWith(Y))r.push({datum:p.bezahltAm,kunde:kName(p.kundeId),leistung:`Gruppenkurs ${k.titel}${(+p.personen||1)>1?', '+p.personen+' Pers.':''}`,zahlart:p.zahlart||'',betrag:+p.betrag||0})}));
   return r.sort((a,b)=>a.datum.localeCompare(b.datum))}
 const ausgabenY=y=>S.ausgaben.filter(a=>(a.datum||'').startsWith(String(y))).sort((a,b)=>a.datum.localeCompare(b.datum));
+function fahrten(y){const Y=String(y),t=today(),m=new Map(),add=(datum,tp)=>{if(!(datum||'').startsWith(Y)||datum>t)return;const n=tpName(tp),key=datum+'|'+n;if(!m.has(key))m.set(key,{datum,ort:n,km:tpKm(n)})};
+  S.lektionen.forEach(l=>{if(l.status!=='abgesagt')add(l.datum,l.treffpunkt)});
+  S.kurse.forEach(k=>(k.termine||[]).forEach(x=>add(x.datum,k.treffpunkt)));
+  const a=+S.cfg.kmAnsatz||0;return [...m.values()].sort((p,q)=>p.datum.localeCompare(q.datum)).map(x=>({...x,kmHR:Math.round(x.km*20)/10,betrag:Math.round(x.km*2*a*100)/100}))}
+const kmSum=fa=>Math.round(fa.reduce((s,x)=>s+x.kmHR,0)*10)/10;
 const groupSum=(arr,key,keys)=>{const m={};keys.forEach(k=>m[k]=0);arr.forEach(x=>{const k=x[key]||'Diverses';m[k]=(m[k]||0)+(+x.betrag||0)});return Object.entries(m).filter(([,v])=>v)};
 
 /* ---------- Bausteine ---------- */
@@ -274,16 +305,21 @@ function statusNote(){if(S.mode==='fehler')return `<div class="note"><p style="m
 function chipL(e){if(e.status==='abgesagt')return '<span class="chip off">abgesagt</span>';if(e.bezahlt)return '<span class="chip paid">bezahlt</span>';if(e.datum<=today())return '<span class="chip open">offen</span>';return '<span class="chip">geplant</span>'}
 const evRow=e=>`<button class="ev${e.t==='K'?' k':''}${e.status==='abgesagt'?' x':''}" type="button" data-act="${e.t==='L'?'openL':'openK'}" data-id="${e.id}"><span class="tm cond">${esc(e.zeit||'')}</span><span><b>${esc(e.titel)}</b><small>${esc(e.sub)}</small></span><span class="ev-r">${e.t==='L'?`<span class="amt cond">${chf(e.betrag)}</span>${chipL(e)}`:'<span class="chip grp">Gruppe</span>'}</span></button>`;
 const shHead=(t,sub)=>`<div class="sh-h"><div><h2>${esc(t)}</h2>${sub?`<p>${sub}</p>`:''}</div><button class="x" type="button" data-act="close" aria-label="Schliessen">×</button></div>`;
-const kundeSelect=(sel,excl)=>`<label class="f">Kunde<select name="kundeId" id="fKunde" required><option value="">Kunde wählen …</option><option value="__neu">+ Neuer Kunde</option>${[...S.kunden].filter(k=>!excl||!excl.has(k.id)).sort(byName).map(k=>`<option value="${k.id}"${k.id===sel?' selected':''}>${esc(k.name)}</option>`).join('')}</select></label><div class="newk" hidden>${canPick()?'<button class="btn" type="button" data-act="pickNew" style="margin-bottom:10px">Aus Kontakten wählen</button>':''}<div class="grid2"><label class="f">Name<input name="nkName" id="fNkName" autocomplete="off"></label><label class="f">Telefon<input name="nkTel" id="fNkTel" type="tel" inputmode="tel"></label></div></div>`;
+const kundeSelect=(sel,excl)=>`<label class="f">Kunde<select name="kundeId" id="fKunde" required><option value="">Kunde wählen …</option><option value="__neu">+ Neuer Kunde</option>${[...S.kunden].filter(k=>!excl||!excl.has(k.id)).sort(byName).map(k=>{const n=kursAnz(k.id);return `<option value="${k.id}"${k.id===sel?' selected':''}>${esc(fullName(k))}${n?` (${n}×)`:''}</option>`}).join('')}</select></label><p class="hint" id="kInfo" style="margin-top:-8px">${kInfo(sel)}</p><div class="newk" hidden>${canPick()?'<button class="btn" type="button" data-act="pickNew" style="margin-bottom:10px">Aus Kontakten wählen</button>':''}<div class="grid2"><label class="f">Vorname<input name="nkVorname" id="fNkVorname" autocomplete="off"></label><label class="f">Name<input name="nkNachname" id="fNkNachname" autocomplete="off"></label></div><label class="f" style="margin-top:10px">Telefon<input name="nkTel" id="fNkTel" type="tel" inputmode="tel"></label><div id="telHit"></div></div>`;
+function kInfo(kid){const k=kun(kid);if(!k)return '';const n=kursAnz(kid),last=lekVon(kid).filter(l=>l.notiz).sort((a,b)=>(b.datum+b.zeit).localeCompare(a.datum+a.zeit))[0];return `${n?`Bisher ${n}× im Kurs`:'Erster Kurs'}${last?` · Letzte Notiz (${fDs(last.datum)}): ${esc(last.notiz)}`:k.notiz?` · Notiz: ${esc(k.notiz)}`:''}`}
+function telHit(t){const f=t.form,box=f&&f.querySelector('#telHit');if(!box)return;const not=f.dataset.form==='C'?f.elements.id.value:'';const k=kByTel(t.value,not);box.innerHTML=k?`<p class="note" style="margin:8px 0 0">Diese Nummer gehört zu <b>${esc(fullName(k))}</b> (${kursAnz(k.id)}× im Kurs). ${f.dataset.form==='C'?`<button class="btn sm" type="button" data-act="openC" data-id="${k.id}">Öffnen</button>`:`<button class="btn sm pri" type="button" data-act="useK" data-id="${k.id}">Diesen Kunden nehmen</button>`}</p>`:''}
+const tprow=t=>`<div class="tprow"><input data-f="name" aria-label="Treffpunkt" value="${esc(t.name)}" placeholder="Ort der Loipe"><input data-f="km" aria-label="Kilometer einfach" type="number" inputmode="decimal" step="0.1" min="0" value="${t.km??''}"><span>km einfach</span><a class="btn sm ghost" href="https://www.google.com/maps/dir/${enc(S.cfg.heimadresse||DEF.heimadresse)}/${enc(t.name||'')}" target="_blank" rel="noopener" aria-label="Route in Google Maps">Maps</a><button type="button" class="x" data-act="tpDel" aria-label="Treffpunkt entfernen">×</button></div>`;
 const stepper=v=>`<div class="f"><span>Personen</span><div class="step"><button type="button" data-act="fPers" data-d="-1" aria-label="Weniger Personen">−</button><output>${v}</output><button type="button" data-act="fPers" data-d="1" aria-label="Mehr Personen">+</button></div><input type="hidden" name="personen" value="${v}"></div>`;
 const saveRow=`<div class="row"><button class="btn pri" type="submit">Speichern</button><button class="btn ghost" type="button" data-act="close">Abbrechen</button></div>`;
-async function newKunde(d){const n=(d.nkName||'').trim();if(!n){toast('Bitte Namen des neuen Kunden eingeben');return null}const id=uid();return (await put('kunden',{id,name:n,tel:(d.nkTel||'').trim(),email:'',ort:'',niveau:'',technik:'',notiz:'',erstellt:today()}))?id:null}
+async function newKunde(d){const vn=(d.nkVorname||'').trim(),nn=(d.nkNachname||'').trim(),tel=(d.nkTel||'').trim();if(!vn){toast('Bitte Vorname des neuen Kunden eingeben');return null}
+  const ex=kByTel(tel);if(ex){toast(`Nummer bekannt: ${fullName(ex)} übernommen`);return ex.id}
+  const id=uid();return (await put('kunden',{id,vorname:vn,nachname:nn,name:[vn,nn].filter(Boolean).join(' '),tel,email:'',ort:'',notiz:'',erstellt:today()}))?id:null}
 
 const canPick=()=>!!(navigator.contacts&&navigator.contacts.select);
 async function pick(multiple){try{const r=await navigator.contacts.select(['name','tel','email'],{multiple});return (r||[]).map(c=>({name:(c.name||[])[0]||'',tel:(c.tel||[])[0]||'',email:(c.email||[])[0]||'',ort:''})).filter(c=>c.name.trim())}catch(e){toast('Kontaktauswahl nicht möglich');return []}}
-async function addMany(list){let n=0,dup=0;const seen=new Set(S.kunden.map(k=>k.name.toLowerCase())),tels=new Set(S.kunden.map(k=>waNum(k.tel)).filter(Boolean));
-  for(const c of list){const name=c.name.trim();if(!name)continue;if(seen.has(name.toLowerCase())||(c.tel&&tels.has(waNum(c.tel)))){dup++;continue}seen.add(name.toLowerCase());if(c.tel)tels.add(waNum(c.tel));
-    if(await put('kunden',{id:uid(),name,tel:c.tel||'',email:c.email||'',ort:c.ort||'',niveau:'',technik:'',notiz:'',erstellt:today()}))n++}
+async function addMany(list){let n=0,dup=0;const seen=new Set(S.kunden.map(k=>fullName(k).toLowerCase())),tels=new Set(S.kunden.map(k=>telKey(k.tel)).filter(Boolean));
+  for(const c of list){const name=c.name.trim();if(!name)continue;if(seen.has(name.toLowerCase())||(c.tel&&tels.has(telKey(c.tel)))){dup++;continue}seen.add(name.toLowerCase());if(c.tel&&telKey(c.tel))tels.add(telKey(c.tel));
+    const nm=c.vorname?{vorname:c.vorname,nachname:c.nachname||''}:splitName(name);if(await put('kunden',{id:uid(),...nm,name:[nm.vorname,nm.nachname].filter(Boolean).join(' ')||name,tel:c.tel||'',email:c.email||'',ort:c.ort||'',notiz:'',erstellt:today()}))n++}
   toast(`${n} ${n===1?'Kunde':'Kunden'} übernommen${dup?`, ${dup} schon vorhanden`:''}`)}
 
 /* ---------- Ansichten ---------- */
@@ -301,19 +337,19 @@ V.kalender=()=>{const m=S.cal||(S.cal=today().slice(0,7)),sel=S.sel||(S.sel=toda
   const list=(by[sel]||[]);
   return band(`${MOL[mo-1]} ${y}`,'')+`<div class="wrap">${statusNote()}<div class="calnav"><button class="btn" type="button" data-act="calMove" data-d="-1" aria-label="Voriger Monat">‹ ${MO[(mo+10)%12]}</button><button class="btn ghost" type="button" data-act="calToday">Heute</button><button class="btn" type="button" data-act="calMove" data-d="1" aria-label="Nächster Monat">${MO[mo%12]} ›</button></div><div class="cal">${['Mo','Di','Mi','Do','Fr','Sa','So'].map(w=>`<span class="wd">${w}</span>`).join('')}${cells}</div><h2 class="day">${fD(sel)}</h2>${list.length?list.map(evRow).join(''):empty('Keine Einträge an diesem Tag.')}</div>`};
 function kList(){const q=S.q.trim().toLowerCase(),om={};offen().forEach(o=>om[o.kid]=(om[o.kid]||0)+o.betrag);
-  const cnt={};S.lektionen.forEach(l=>cnt[l.kundeId]=(cnt[l.kundeId]||0)+1);
-  const ks=[...S.kunden].sort(byName).filter(k=>!q||[k.name,k.ort,k.tel,k.email].join(' ').toLowerCase().includes(q));
-  if(!S.kunden.length)return empty('Noch keine Kunden. Mit «+ Kunde» erfassen oder Kontakte aus einer Datei übernehmen.');
+  const nt={};S.lektionen.forEach(l=>{if(l.notiz)nt[l.kundeId]=(nt[l.kundeId]||'')+' '+l.notiz});
+  const ks=[...S.kunden].sort(byName).filter(k=>!q||[fullName(k),k.ort,k.tel,k.email,k.notiz,nt[k.id]].join(' ').toLowerCase().includes(q));
+  if(!S.kunden.length)return empty('Noch keine Kunden. Mit «+ Kunde» erfassen oder Kontakte übernehmen.');
   if(!ks.length)return empty('Kein Kunde gefunden.');
-  return ks.map(k=>{const ini=k.name.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase(),o=om[k.id]||0;return `<button class="li" type="button" data-act="openC" data-id="${k.id}"><span class="av cond">${esc(ini)}</span><span><b>${esc(k.name)}</b><small>${esc([k.ort,k.niveau,k.technik].filter(Boolean).join(' · ')||k.tel||'')}</small></span><span class="ev-r">${o?`<span class="chip open">${chf(o)} offen</span>`:''}<small>${cnt[k.id]||0} Lekt.</small></span></button>`}).join('')}
-V.kunden=()=>band('Kunden',`${S.kunden.length} ${S.kunden.length===1?'Kunde':'Kunden'}`)+`<div class="wrap">${statusNote()}<div class="search"><input id="kq" type="search" placeholder="Name, Ort oder Telefon" value="${esc(S.q)}" aria-label="Kunden suchen" autocomplete="off"></div><div class="row mt">${canPick()?'<button class="btn" type="button" data-act="pickMany">Aus Kontakten übernehmen</button>':''}<label class="btn ghost" for="vcf">Kontakte aus Datei (.vcf)</label><input id="vcf" type="file" accept=".vcf,text/vcard,text/x-vcard" hidden></div><div id="klist">${kList()}</div></div>`;
+  return ks.map(k=>{const fn=fullName(k),pt=fn.split(/\s+/),ini=((k.vorname||pt[0]||'')[0]||'')+((k.nachname||pt[1]||'')[0]||''),o=om[k.id]||0,n=kursAnz(k.id);return `<button class="li" type="button" data-act="openC" data-id="${k.id}"><span class="av cond">${esc(ini.toUpperCase())}</span><span><b>${esc(fn)}</b><small>${esc([k.ort,k.tel].filter(Boolean).join(' · '))}</small></span><span class="ev-r">${o?`<span class="chip open">${chf(o)} offen</span>`:''}<small>${n}× im Kurs</small></span></button>`}).join('')}
+V.kunden=()=>band('Kunden',`${S.kunden.length} ${S.kunden.length===1?'Kunde':'Kunden'}`)+`<div class="wrap">${statusNote()}<div class="search"><input id="kq" type="search" placeholder="Name, Ort, Telefon oder Notiz" value="${esc(S.q)}" aria-label="Kunden suchen" autocomplete="off"></div><div class="row mt">${canPick()?'<button class="btn" type="button" data-act="pickMany">Aus Kontakten übernehmen</button>':''}<label class="btn ghost" for="vcf">Kontakte aus Datei (.vcf)</label><input id="vcf" type="file" accept=".vcf,text/vcard,text/x-vcard" hidden></div><div id="klist">${kList()}</div></div>`;
 V.kurse=()=>{const t=today();const ks=[...S.kurse].map(k=>({k,first:(k.termine||[])[0]?.datum||'',last:(k.termine||[]).slice(-1)[0]?.datum||''})).sort((a,b)=>a.first.localeCompare(b.first));
   const card=({k,first,last})=>{const tn=(k.teilnehmer||[]).filter(p=>!p.warte),pers=tn.reduce((s,p)=>s+(+p.personen||1),0),w=(k.teilnehmer||[]).length-tn.length,o=tn.filter(p=>!p.bezahlt).reduce((s,p)=>s+(+p.betrag||0),0);
-    return `<button class="card" type="button" data-act="openK" data-id="${k.id}"><span class="card-h"><b>${esc(k.titel)}</b><span class="chip">${(k.termine||[]).length} Termine</span></span><small>${first?fD(first):'ohne Termin'}${last&&last!==first?' bis '+fD(last):''} · ${esc(k.treffpunkt||S.cfg.treffpunkt)}</small><span class="fill"><span class="bar"><i style="width:${Math.min(100,pers/(+k.max||1)*100)}%"></i></span><span class="cond">${pers} / ${k.max} Plätze</span></span><span class="row">${o?`<span class="chip open">${chf(o)} offen</span>`:tn.length?'<span class="chip paid">alle bezahlt</span>':''}${w?`<span class="chip">${w} auf Warteliste</span>`:''}</span></button>`};
+    return `<button class="card" type="button" data-act="openK" data-id="${k.id}"><span class="card-h"><b>${esc(k.titel)}</b><span class="chip">${(k.termine||[]).length} Termine</span></span><small>${first?fD(first):'ohne Termin'}${last&&last!==first?' bis '+fD(last):''} · ${esc(tpName(k.treffpunkt))}${k.technik?' · '+esc(k.technik):''}</small><span class="fill"><span class="bar"><i style="width:${Math.min(100,pers/(+k.max||1)*100)}%"></i></span><span class="cond">${pers} / ${k.max} Plätze</span></span><span class="row">${o?`<span class="chip open">${chf(o)} offen</span>`:tn.length?'<span class="chip paid">alle bezahlt</span>':''}${w?`<span class="chip">${w} auf Warteliste</span>`:''}</span></button>`};
   const akt=ks.filter(x=>!x.last||x.last>=t),alt=ks.filter(x=>x.last&&x.last<t).reverse();
   return band('Gruppenkurse',`${akt.length} aktuell`)+`<div class="wrap">${statusNote()}${akt.length?akt.map(card).join(''):empty('Noch kein Gruppenkurs. Mit «+ Gruppenkurs» anlegen.')}${alt.length?`<h2 class="day">Vergangen</h2>${alt.map(card).join('')}`:''}</div>`};
-V.geld=()=>{const y=S.year,ein=einnahmen(y),aus=ausgabenY(y),E=sum(ein),A=sum(aus),op=offen();
-  const ms=[...Array(12).keys()].map(m=>{const k=`${y}-${p2(m+1)}`;return {m,e:sum(ein.filter(r=>r.datum.startsWith(k))),a:sum(aus.filter(r=>r.datum.startsWith(k)))}}).filter(x=>x.e||x.a);
+V.geld=()=>{const y=S.year,ein=einnahmen(y),aus=ausgabenY(y),fa=fahrten(y),E=sum(ein),AB=sum(aus),FA=sum(fa),A=AB+FA,op=offen();
+  const ms=[...Array(12).keys()].map(m=>{const k=`${y}-${p2(m+1)}`;return {m,e:sum(ein.filter(r=>r.datum.startsWith(k))),a:sum(aus.filter(r=>r.datum.startsWith(k)))+sum(fa.filter(r=>r.datum.startsWith(k)))}}).filter(x=>x.e||x.a);
   const mx=Math.max(1,...ms.map(x=>Math.max(x.e,x.a)));const za=groupSum(ein,'zahlart',ZA),ka=groupSum(aus,'kategorie',KAT);
   const tbl=(rows,total,label)=>`<table class="t"><tbody>${rows.map(([k,v])=>`<tr><td>${esc(k)}</td><td>${chf(v)}</td></tr>`).join('')}<tr class="sum"><td>${label}</td><td>${chf(total)}</td></tr></tbody></table>`;
   return band(`Geld ${y}`,'Einnahmen zählen am Tag der Zahlung')+`<div class="wrap">${statusNote()}<div class="calnav"><button class="btn" type="button" data-act="yMove" data-d="-1">‹ ${y-1}</button><button class="btn" type="button" data-act="yMove" data-d="1">${y+1} ›</button></div>
@@ -321,102 +357,122 @@ V.geld=()=>{const y=S.year,ein=einnahmen(y),aus=ausgabenY(y),E=sum(ein),A=sum(au
   <section class="s"><h3>Offen zum Einkassieren${op.length?` · ${chf(sum(op))}`:''}</h3>${op.length?op.map(o=>`<button class="ev" type="button" data-act="${o.t==='L'?'openL':'openK'}" data-id="${o.id}"><span class="tm cond" style="font-size:20px">${o.datum?esc(fDs(o.datum).slice(0,6)):''}</span><span><b>${esc(o.titel)}</b><small>${esc(o.art)}</small></span><span class="amt cond pkt">${chf(o.betrag)}</span></button>`).join(''):empty('Alles bezahlt.')}</section>
   <section class="s"><h3>Pro Monat</h3>${ms.length?`<div class="months">${ms.map(x=>`<span>${MO[x.m]}</span><span><span class="bar"><i style="width:${x.e/mx*100}%"></i></span>${x.a?`<span class="bar thin"><i style="width:${x.a/mx*100}%"></i></span>`:''}</span><span class="v">${chf(x.e)}${x.a?`<small>Ausgaben ${chf(x.a)}</small>`:''}</span>`).join('')}</div>`:empty(`Für ${y} noch keine Zahlungen erfasst.`)}</section>
   ${za.length?`<section class="s"><h3>Einnahmen nach Zahlungsart</h3>${tbl(za,E,'Total Einnahmen')}</section>`:''}
-  <section class="s"><h3>Ausgaben ${y}</h3>${aus.length?[...aus].reverse().map(a=>`<button class="ev" type="button" data-act="editA" data-id="${a.id}"><span class="tm cond" style="font-size:20px">${esc(fDs(a.datum).slice(0,6))}</span><span><b>${esc(a.text||a.kategorie)}</b><small>${esc(a.kategorie)}</small></span><span class="amt cond">${chf(a.betrag)}</span></button>`).join('')+`<div class="mt">${tbl(ka,A,'Total Ausgaben')}</div>`:empty('Noch keine Ausgaben. Fahrten, Wachs, Material oder Versicherung mit «+ Ausgabe» erfassen.')}</section>
-  <section class="s"><h3>Für die Steuererklärung</h3>${dl?`<div class="row"><button class="btn pri" type="button" data-act="pdf">Abrechnung ${y} (PDF)</button><button class="btn" type="button" data-act="csvE">Einnahmen (CSV)</button><button class="btn" type="button" data-act="csvA">Ausgaben (CSV)</button></div>`:'<p class="hint">Downloads sind in dieser Ansicht nicht verfügbar.</p>'}<p class="hint">Einnahmen, Ausgaben und Ergebnis pro Jahr. Quittungen und Belege 10 Jahre aufbewahren.</p></section></div>`};
+  <section class="s"><h3>Ausgaben ${y} (Belege)</h3>${aus.length?[...aus].reverse().map(a=>`<button class="ev" type="button" data-act="editA" data-id="${a.id}"><span class="tm cond" style="font-size:20px">${esc(fDs(a.datum).slice(0,6))}</span><span><b>${esc(a.text||a.kategorie)}</b><small>${esc(a.kategorie)}</small></span><span class="amt cond">${chf(a.betrag)}</span></button>`).join('')+`<div class="mt">${tbl(ka,AB,'Total Belege')}</div>`:empty('Noch keine Belege. Wachs, Material, Versicherung oder Parkgebühren mit «+ Ausgabe» erfassen.')}</section>
+  <section class="s"><h3>Fahrten ${y} · Kilometerpauschale</h3>${fa.length?`<table class="t"><tbody><tr><td>${fa.length} ${fa.length===1?'Kurstag':'Kurstage'} · ${num1(kmSum(fa))} km hin und zurück × CHF ${num(S.cfg.kmAnsatz)}</td><td>${chf(FA)}</td></tr></tbody></table><details class="mt"><summary>Fahrten einzeln</summary>${fa.map(x=>`<div class="ev"><span class="tm cond" style="font-size:20px">${esc(fDs(x.datum).slice(0,6))}</span><span><b>${esc(x.ort)}</b><small>${num1(x.kmHR)} km${x.km?'':' · Distanz fehlt in den Einstellungen'}</small></span><span class="amt cond">${chf(x.betrag)}</span></div>`).join('')}</details>`:empty('Noch keine Kurstage in diesem Jahr.')}<p class="hint">Ab ${esc(S.cfg.heimadresse||DEF.heimadresse)}, pro Kurstag und Treffpunkt hin und zurück. Distanzen und Ansatz in den Einstellungen.</p></section>
+  <section class="s"><h3>Für die Steuererklärung</h3>${dl?`<div class="row"><button class="btn pri" type="button" data-act="pdf">Abrechnung ${y} (PDF)</button><button class="btn" type="button" data-act="csvE">Einnahmen (CSV)</button><button class="btn" type="button" data-act="csvA">Ausgaben (CSV)</button><button class="btn" type="button" data-act="csvF">Fahrten (CSV)</button></div>`:''}<p class="hint">Einnahmen, Ausgaben inkl. Fahrten und Ergebnis pro Jahr. Die Fahrtenliste dient als Fahrtenbuch. Quittungen und Belege 10 Jahre aufbewahren.</p></section></div>`};
 
 /* ---------- Detailblätter ---------- */
-function shL(id){const l=getL(id);if(!l)return null;const k=kun(l.kundeId),tp=l.treffpunkt||S.cfg.treffpunkt,st=l.status||'geplant';
-  const v={name:k?.name||'',datum:fD(l.datum),zeit:l.zeit,dauer:dTxt(l.dauer),treffpunkt:tp,absender:S.cfg.absender,kurs:''};
-  return `${shHead(k?.name||'Lektion',`${fD(l.datum)}, ${esc(l.zeit)} Uhr · ${dTxt(l.dauer)} · ${l.personen||1} Pers.`)}
-  <div class="kv"><span>Betrag</span><b class="cond">${chf(l.betrag)}</b><span>Treffpunkt</span><b>${esc(tp)}</b>${l.notiz?`<span>Notiz</span><b>${esc(l.notiz)}</b>`:''}</div>
+function shL(id){const l=getL(id);if(!l)return null;const k=kun(l.kundeId),tp=tpName(l.treffpunkt),st=l.status||'geplant',nr=st==='abgesagt'?0:lekNr(l);
+  const v={name:vorname(k),vorname:vorname(k),datum:fD(l.datum),zeit:l.zeit,bis:bisOf(l),dauer:dTxt(l.dauer),treffpunkt:tp,absender:S.cfg.absender,kurs:''};
+  const prev=k?lekVon(k.id).filter(x=>x.id!==id&&x.notiz).sort((a,b)=>(b.datum+b.zeit).localeCompare(a.datum+a.zeit)).slice(0,3):[];
+  return `${shHead(fullName(k)||'Lektion',`${fD(l.datum)}, ${vonBis(l)} Uhr · ${dTxt(l.dauer)}${nr?` · ${nr}.&nbsp;Lektion`:''}`)}
+  <div class="kv"><span>Betrag</span><b class="cond">${chf(l.betrag)}${l.betragManuell?' <small class="hint">von Hand</small>':''}</b>${l.technik?`<span>Technik</span><b>${esc(l.technik)}</b>`:''}${l.niveau?`<span>Niveau</span><b>${esc(l.niveau)}</b>`:''}<span>Personen</span><b>${l.personen||1}</b><span>Treffpunkt</span><b>${esc(tp)}${tpKm(tp)?` <small class="hint">${num1(tpKm(tp))}&nbsp;km</small>`:''}</b>${l.notiz?`<span>Notiz</span><b>${esc(l.notiz)}</b>`:''}</div>
+  ${prev.length?`<section class="s"><h3>Frühere Notizen</h3>${prev.map(x=>`<p style="margin:0 0 6px"><span class="hint">${fDs(x.datum)}${x.technik?' · '+esc(x.technik):''}:</span> ${esc(x.notiz)}</p>`).join('')}</section>`:''}
   <section class="s"><h3>Status</h3><div class="seg">${['geplant','durchgeführt','abgesagt'].map(s=>`<button type="button" data-act="lStat" data-id="${id}" data-v="${s}" aria-pressed="${st===s}">${cap(s)}</button>`).join('')}</div></section>
   <section class="s"><h3>Zahlung</h3>${l.bezahlt?`<p style="margin:0 0 8px">Bezahlt am ${fDs(l.bezahltAm)} per ${esc(l.zahlart)}</p><div class="row">${dl?`<button class="btn" type="button" data-act="quit" data-id="${id}">Quittung (PDF)</button>`:''}<button class="btn ghost" type="button" data-act="lUnpay" data-id="${id}">Rückgängig</button></div>`:`<div class="seg">${ZA.map(z=>`<button type="button" data-act="lPay" data-id="${id}" data-v="${z}">${z}</button>`).join('')}</div><p class="hint">Antippen, sobald bezahlt.</p>`}</section>
   <section class="s"><h3>WhatsApp${k?.tel?' an '+esc(k.tel):''}</h3><div class="row">${wa(k?.tel,fill(S.cfg.tplOk,v),'Bestätigung')}${wa(k?.tel,fill(S.cfg.tplErin,v),'Erinnerung')}${wa(k?.tel,fill(S.cfg.tplAbs,v),'Absage')}</div>${k?.tel?'':'<p class="hint">Keine Telefonnummer: WhatsApp fragt nach dem Kontakt.</p>'}</section>
-  <section class="s"><div class="row"><a class="btn" href="${gcal('Langlauf: '+(k?.name||''),l.datum,l.zeit,l.dauer,tp,`${l.personen||1} Pers. · ${chf(l.betrag)}${l.notiz?'\n'+l.notiz:''}`)}" target="_blank" rel="noopener">In Google Kalender</a><button class="btn" type="button" data-act="editL" data-id="${id}">Bearbeiten</button>${k?`<button class="btn ghost" type="button" data-act="openC" data-id="${k.id}">Kunde</button>`:''}<button class="btn danger" type="button" data-act="delL" data-id="${id}">Löschen</button></div></section>`}
+  <section class="s"><div class="row"><a class="btn" href="${gcal('Langlauf: '+fullName(k),l.datum,l.zeit,l.dauer,tp,`${l.personen||1} Pers. · ${chf(l.betrag)}${l.notiz?'\n'+l.notiz:''}`)}" target="_blank" rel="noopener">In Google Kalender</a><button class="btn" type="button" data-act="editL" data-id="${id}">Bearbeiten</button>${k?`<button class="btn ghost" type="button" data-act="openC" data-id="${k.id}">Kunde</button>`:''}<button class="btn danger" type="button" data-act="delL" data-id="${id}">Löschen</button></div></section>`}
 function shC(id){const k=kun(id);if(!k)return null;const ls=S.lektionen.filter(l=>l.kundeId===id).sort((a,b)=>(b.datum+b.zeit).localeCompare(a.datum+a.zeit));
   const kk=S.kurse.filter(c=>(c.teilnehmer||[]).some(p=>p.kundeId===id));const o=offen().filter(x=>x.kid===id);
   const bez=sum(ls.filter(l=>l.bezahlt))+kk.reduce((s,c)=>s+(c.teilnehmer.filter(p=>p.kundeId===id&&p.bezahlt).reduce((a,p)=>a+(+p.betrag||0),0)),0);
-  return `${shHead(k.name,esc([k.ort,k.niveau,k.technik].filter(Boolean).join(' · ')))}
+  const nts=ls.filter(l=>l.notiz),last=ls.find(l=>l.status!=='abgesagt'&&(l.technik||l.niveau));
+  return `${shHead(fullName(k),esc([k.ort,last?.technik,last?.niveau].filter(Boolean).join(' · ')))}
   <div class="row mt">${k.tel?`<a class="btn pri" href="tel:${esc(k.tel.replace(/\s/g,''))}">Anrufen</a>${wa(k.tel,'','WhatsApp')}`:''}${k.email?`<a class="btn" href="mailto:${esc(k.email)}">E-Mail</a>`:''}<button class="btn ghost" type="button" data-act="copyC" data-id="${id}">Kontakt kopieren</button></div>
   ${k.tel||k.email?`<p class="hint">${esc([k.tel,k.email].filter(Boolean).join(' · '))}</p>`:''}
-  <div class="big three"><div>Lektionen<b>${ls.length}</b></div><div>Bezahlt CHF<b>${num(bez)}</b></div><div class="${o.length?'pk':''}">Offen CHF<b>${num(sum(o))}</b></div></div>
-  ${k.notiz?`<section class="s"><h3>Notiz</h3><p style="margin:0">${esc(k.notiz)}</p></section>`:''}
-  <section class="s"><h3>Lektionen</h3>${ls.length?ls.map(l=>evRow({t:'L',id:l.id,datum:l.datum,zeit:fDs(l.datum).slice(0,6),status:l.status||'geplant',bezahlt:l.bezahlt,betrag:l.betrag,titel:`${fD(l.datum)}, ${l.zeit}`,sub:`${dTxt(l.dauer)} · ${l.personen||1} Pers.`})).join('').replaceAll('class="tm cond"','class="tm cond" style="font-size:20px"'):'<p class="empty">Noch keine Lektion.</p>'}</section>
+  <div class="big three"><div>Im Kurs<b>${kursAnz(id)}×</b></div><div>Bezahlt CHF<b>${num(bez)}</b></div><div class="${o.length?'pk':''}">Offen CHF<b>${num(sum(o))}</b></div></div>
+  <section class="s"><h3>Notizen</h3>${k.notiz?`<p style="margin:0 0 8px"><b>Allgemein:</b> ${esc(k.notiz)}</p>`:''}${nts.map(l=>`<p style="margin:0 0 6px"><span class="hint">${fDs(l.datum)}${l.technik?' · '+esc(l.technik):''}:</span> ${esc(l.notiz)}</p>`).join('')}${!k.notiz&&!nts.length?'<p class="empty">Noch keine Notizen. Notizen zu einer Lektion erscheinen hier.</p>':''}</section>
+  <section class="s"><h3>Lektionen</h3>${ls.length?ls.map(l=>evRow({t:'L',id:l.id,datum:l.datum,zeit:fDs(l.datum).slice(0,6),status:l.status||'geplant',bezahlt:l.bezahlt,betrag:l.betrag,titel:`${fD(l.datum)}, ${vonBis(l)}`,sub:[l.status==='abgesagt'?'':`${lekNr(l)}. Lektion`,l.technik,dTxt(l.dauer)].filter(Boolean).join(' · ')})).join('').replaceAll('class="tm cond"','class="tm cond" style="font-size:20px"'):'<p class="empty">Noch keine Lektion.</p>'}</section>
   ${kk.length?`<section class="s"><h3>Gruppenkurse</h3>${kk.map(c=>`<button class="card" type="button" data-act="openK" data-id="${c.id}"><b>${esc(c.titel)}</b><small>${fD((c.termine||[])[0]?.datum)}</small></button>`).join('')}</section>`:''}
   <section class="s"><div class="row"><button class="btn pk" type="button" data-act="newL" data-k="${id}">+ Lektion</button><button class="btn" type="button" data-act="editC" data-id="${id}">Bearbeiten</button><button class="btn danger" type="button" data-act="delC" data-id="${id}">Löschen</button></div></section>`}
-function shK(id){const k=getK(id);if(!k)return null;const tn=k.teilnehmer||[],ak=tn.filter(p=>!p.warte),wt=tn.filter(p=>p.warte),pers=ak.reduce((s,p)=>s+(+p.personen||1),0),tp=k.treffpunkt||S.cfg.treffpunkt,tm=k.termine||[];
+function shK(id){const k=getK(id);if(!k)return null;const tn=k.teilnehmer||[],ak=tn.filter(p=>!p.warte),wt=tn.filter(p=>p.warte),pers=ak.reduce((s,p)=>s+(+p.personen||1),0),tp=tpName(k.treffpunkt),tm=k.termine||[];
   const bz=ak.filter(p=>p.bezahlt).reduce((s,p)=>s+(+p.betrag||0),0),of=ak.filter(p=>!p.bezahlt).reduce((s,p)=>s+(+p.betrag||0),0);
-  const nt=tm.find(t=>t.datum>=today())||tm[tm.length-1],vars=n=>({name:n,datum:nt?fD(nt.datum):'',zeit:nt?.zeit||'',dauer:nt?dTxt(nt.dauer):'',treffpunkt:tp,absender:S.cfg.absender,kurs:k.titel}),msg=S.open['m'+id];
+  const nt=tm.find(t=>t.datum>=today())||tm[tm.length-1],vars=n=>({name:n,vorname:n,datum:nt?fD(nt.datum):'',zeit:nt?.zeit||'',bis:nt?bisOf(nt):'',dauer:nt?dTxt(nt.dauer):'',treffpunkt:tp,absender:S.cfg.absender,kurs:k.titel}),msg=S.open['m'+id];
   const tnRow=(p,w)=>`<div class="tn"><span><b>${esc(kName(p.kundeId))}</b><small>${(+p.personen||1)>1?p.personen+' Pers. · ':''}${chf(p.betrag)}${p.bezahlt?` · bezahlt ${fDs(p.bezahltAm)}, ${esc(p.zahlart)}`:''}</small></span><span class="row">${w?`<button class="btn sm pri" type="button" data-act="tUp" data-id="${id}" data-k="${p.kundeId}">Nachrücken</button>`:p.bezahlt?`<button class="btn sm ghost" type="button" data-act="tUnpay" data-id="${id}" data-k="${p.kundeId}">Zahlung rückgängig</button>`:ZA.map(z=>`<button class="btn sm" type="button" data-act="tPay" data-id="${id}" data-k="${p.kundeId}" data-v="${z}">${z==='Überweisung'?'Überw.':z}</button>`).join('')}<button class="btn sm danger" type="button" data-act="tDel" data-id="${id}" data-k="${p.kundeId}">Entfernen</button></span></div>`;
-  return `${shHead(k.titel,`${tm.length} Termine · ${chf(k.preis)} pro Person · ${esc(tp)}`)}
+  return `${shHead(k.titel,[`${tm.length} Termine`,`${chf(k.preis)} pro Person`,esc(k.technik||''),esc(k.niveau||''),esc(tp)].filter(Boolean).join(' · '))}
   <div class="fill mt"><span class="bar"><i style="width:${Math.min(100,pers/(+k.max||1)*100)}%"></i></span><span class="cond">${pers} / ${k.max} Plätze</span></div>
-  <section class="s"><h3>Termine</h3>${tm.map((t,i)=>{const o=S.open[id+':'+i],da=t.da||[];return `<div class="trm"><span class="tm cond">${esc(t.zeit)}</span><span><b>${fD(t.datum)}</b><small>${dTxt(t.dauer)}${ak.length?` · ${da.length} von ${ak.length} anwesend`:''}</small></span><span class="row"><button class="btn sm" type="button" data-act="prz" data-id="${id}" data-i="${i}" aria-expanded="${!!o}">Präsenz</button><a class="btn sm" href="${gcal('Langlauf: '+k.titel,t.datum,t.zeit,t.dauer,tp,`Gruppenkurs, Termin ${i+1} von ${tm.length}`)}" target="_blank" rel="noopener">In Google Kalender</a></span>${o?`<div class="chips">${ak.map(p=>`<button type="button" data-act="przT" data-id="${id}" data-i="${i}" data-k="${p.kundeId}" aria-pressed="${da.includes(p.kundeId)}">${esc(kName(p.kundeId))}</button>`).join('')||'<span class="hint">Noch keine Teilnehmer.</span>'}</div>`:''}</div>`}).join('')}</section>
+  <section class="s"><h3>Termine</h3>${tm.map((t,i)=>{const o=S.open[id+':'+i],da=t.da||[];return `<div class="trm"><span class="tm cond">${esc(t.zeit)}</span><span><b>${fD(t.datum)}</b><small>bis ${bisOf(t)} · ${dTxt(t.dauer)}${ak.length?` · ${da.length} von ${ak.length} anwesend`:''}</small></span><span class="row"><button class="btn sm" type="button" data-act="prz" data-id="${id}" data-i="${i}" aria-expanded="${!!o}">Präsenz</button><a class="btn sm" href="${gcal('Langlauf: '+k.titel,t.datum,t.zeit,t.dauer,tp,`Gruppenkurs, Termin ${i+1} von ${tm.length}`)}" target="_blank" rel="noopener">In Google Kalender</a></span>${o?`<div class="chips">${ak.map(p=>`<button type="button" data-act="przT" data-id="${id}" data-i="${i}" data-k="${p.kundeId}" aria-pressed="${da.includes(p.kundeId)}">${esc(kName(p.kundeId))}</button>`).join('')||'<span class="hint">Noch keine Teilnehmer.</span>'}</div>`:''}</div>`}).join('')}</section>
   <section class="s"><h3>Teilnehmer · ${chf(bz)} bezahlt${of?` · <span class="pkt">${chf(of)} offen</span>`:''}</h3>${ak.length?ak.map(p=>tnRow(p,false)).join(''):'<p class="empty">Noch niemand angemeldet.</p>'}${wt.length?`<h3 class="mt">Warteliste</h3>${wt.map(p=>tnRow(p,true)).join('')}`:''}<button class="btn pk mt" type="button" data-act="addT" data-id="${id}">+ Teilnehmer</button></section>
-  ${ak.length?`<section class="s"><h3>WhatsApp zum ${nt&&nt.datum>=today()?'nächsten':'letzten'} Termin${nt?' ('+fD(nt.datum)+')':''}</h3><div class="seg"><button type="button" data-act="kMsg" data-id="${id}" data-v="tplErin" aria-pressed="${msg==='tplErin'}">Erinnerung</button><button type="button" data-act="kMsg" data-id="${id}" data-v="tplAbs" aria-pressed="${msg==='tplAbs'}">Absage</button></div>${msg?`<div class="row mt">${ak.map(p=>{const c=kun(p.kundeId);return wa(c?.tel,fill(S.cfg[msg],vars(c?.name||'')),c?.name||'Teilnehmer','btn sm')}).join('')}<a class="btn sm pri" href="https://wa.me/?text=${enc(fill(S.cfg[msg],vars('zusammen')))}" target="_blank" rel="noopener">In WhatsApp-Gruppe</a></div>`:''}</section>`:''}
+  ${ak.length?`<section class="s"><h3>WhatsApp zum ${nt&&nt.datum>=today()?'nächsten':'letzten'} Termin${nt?' ('+fD(nt.datum)+')':''}</h3><div class="seg"><button type="button" data-act="kMsg" data-id="${id}" data-v="tplErin" aria-pressed="${msg==='tplErin'}">Erinnerung</button><button type="button" data-act="kMsg" data-id="${id}" data-v="tplAbs" aria-pressed="${msg==='tplAbs'}">Absage</button></div>${msg?`<div class="row mt">${ak.map(p=>{const c=kun(p.kundeId);return wa(c?.tel,fill(S.cfg[msg],vars(vorname(c))),fullName(c)||'Teilnehmer','btn sm')}).join('')}<a class="btn sm pri" href="https://wa.me/?text=${enc(fill(S.cfg[msg],vars('zusammen')))}" target="_blank" rel="noopener">In WhatsApp-Gruppe</a></div>`:''}</section>`:''}
   ${k.notiz?`<section class="s"><h3>Notiz</h3><p style="margin:0">${esc(k.notiz)}</p></section>`:''}
   <section class="s"><div class="row"><button class="btn" type="button" data-act="editK" data-id="${id}">Bearbeiten</button><button class="btn danger" type="button" data-act="delK" data-id="${id}">Löschen</button></div></section>`}
 
 /* ---------- Formulare ---------- */
-function fmL(l){l=l||{};const isNew=!l.id,c=S.cfg,dauer=+l.dauer||1,pers=+l.personen||1;
-  return `${shHead(isNew?'Neue Lektion':'Lektion bearbeiten')}<form class="fm" data-form="L"${isNew?'':' data-manual="1"'}><input type="hidden" name="id" value="${l.id||uid()}">
+function fmL(l){l=l||{};const isNew=!l.id,c=S.cfg,pers=+l.personen||1,von=l.zeit||'10:00',bis=bisOf({zeit:von,bis:l.bis,dauer:l.dauer||1}),dur=(hm(bis)-hm(von))/60;
+  const prevT=l.kundeId?lekVon(l.kundeId).filter(x=>x.id!==l.id).sort((a,b)=>(b.datum+b.zeit).localeCompare(a.datum+a.zeit))[0]:null;
+  const tech=l.technik||prevT?.technik||'Klassisch',niv=l.niveau??(prevT?.niveau||'');
+  return `${shHead(isNew?'Neue Lektion':'Lektion bearbeiten')}<form class="fm" data-form="L" data-dur="${dur}"${l.betragManuell?' data-manual="1"':''}><input type="hidden" name="id" value="${l.id||uid()}">
   ${kundeSelect(l.kundeId||'')}
-  <div class="grid2"><label class="f">Datum<input type="date" name="datum" id="fDatum" value="${l.datum||today()}" required></label><label class="f">Zeit<input type="time" name="zeit" id="fZeit" value="${l.zeit||'10:00'}" step="900" required></label></div>
-  <div class="f"><span>Dauer</span><div class="seg">${DAUER.map(d=>`<button type="button" data-act="fDauer" data-v="${d}" aria-pressed="${dauer===d}">${dShort(d)}</button>`).join('')}</div><input type="hidden" name="dauer" value="${dauer}"></div>
-  <div class="grid2">${stepper(pers)}<label class="f">Betrag CHF<input name="betrag" id="fBetrag" type="number" inputmode="decimal" step="0.05" min="0" value="${l.betrag??calcB(dauer,pers).toFixed(2)}" required></label></div>
-  <p class="hint" style="margin-top:-8px">Tarif ${chf(c.stundentarif)} pro Stunde${+c.zuschlag?`, + ${chf(c.zuschlag)} je weitere Person`:''}. Betrag lässt sich überschreiben.</p>
-  <label class="f">Treffpunkt<input name="treffpunkt" id="fTp" value="${esc(l.treffpunkt||'')}" placeholder="${esc(c.treffpunkt)}"></label>
-  <label class="f">Notiz<textarea name="notiz" id="fNotiz" rows="2">${esc(l.notiz||'')}</textarea></label>
+  <label class="f">Datum<input type="date" name="datum" id="fDatum" value="${l.datum||today()}" required></label>
+  <div class="grid2"><label class="f">Von<input type="time" name="zeit" id="fZeit" value="${von}" step="300" required></label><label class="f">Bis<input type="time" name="bis" id="fBis" value="${bis}" step="300" required></label></div>
+  <div class="row" style="margin-top:-6px">${QDUR.map(d=>`<button class="btn sm ghost" type="button" data-act="fDur" data-v="${d}">${dShort(d)}</button>`).join('')}<span class="hint" id="fDurTxt" style="margin:0 0 0 4px">${dTxt(dur)}</span></div>
+  <div class="grid2">${stepper(pers)}<label class="f">Betrag CHF<input name="betrag" id="fBetrag" type="number" inputmode="decimal" step="0.05" min="0" value="${l.betrag??calcB(dur,pers).toFixed(2)}" required></label></div>
+  <p class="hint" style="margin-top:-8px">${chf(c.stundentarif)} pro Stunde${+c.zuschlag?`, + ${chf(c.zuschlag)} je weitere Person`:''}, rechnet sich mit der Zeit mit. Von Hand überschreibbar. <button class="btn sm ghost" type="button" data-act="fCalc" style="min-height:32px;padding:0 8px">Neu berechnen</button></p>
+  <div class="f"><span>Technik</span>${segBtns('technik',TECH,tech)}</div>
+  <div class="f"><span>Niveau (optional)</span>${segBtns('niveau',NIV,niv,true)}</div>
+  <label class="f">Treffpunkt<select name="treffpunkt" id="fTp">${tpOpts(l.treffpunkt)}</select></label>
+  <label class="f">Notiz zur Lektion (erscheint beim Kunden)<textarea name="notiz" id="fNotiz" rows="2">${esc(l.notiz||'')}</textarea></label>
   ${l.bezahlt?`<label class="f">Bezahlt am<input type="date" name="bezahltAm" id="fBezAm" value="${l.bezahltAm||''}"></label>`:''}${saveRow}</form>`}
-function fmC(k){k=k||{};const o=(a,v)=>a.map(x=>`<option${x===v?' selected':''}>${x}</option>`).join('');
+function fmC(k){k=k||{};const nm=k.vorname!==undefined?{vorname:k.vorname,nachname:k.nachname||''}:splitName(k.name);
   return `${shHead(k.id?'Kunde bearbeiten':'Neuer Kunde')}<form class="fm" data-form="C"><input type="hidden" name="id" value="${k.id||uid()}">${canPick()?'<button class="btn" type="button" data-act="pickC">Aus Kontakten übernehmen</button>':''}
-  <label class="f">Name<input name="name" id="fcName" value="${esc(k.name||'')}" required autocomplete="off"></label>
-  <div class="grid2"><label class="f">Telefon<input name="tel" id="fcTel" type="tel" inputmode="tel" value="${esc(k.tel||'')}"></label><label class="f">Ort<input name="ort" id="fcOrt" value="${esc(k.ort||'')}"></label></div>
+  <div class="grid2"><label class="f">Vorname<input name="vorname" id="fcVorname" value="${esc(nm.vorname)}" required autocomplete="off"></label><label class="f">Name<input name="nachname" id="fcNachname" value="${esc(nm.nachname)}" autocomplete="off"></label></div>
+  <div class="grid2"><label class="f">Telefon<input name="tel" id="fcTel" type="tel" inputmode="tel" value="${esc(k.tel||'')}"></label><label class="f">Ort<input name="ort" id="fcOrt" value="${esc(k.ort||'')}"></label></div><div id="telHit"></div>
   <label class="f">E-Mail<input name="email" id="fcMail" type="email" inputmode="email" value="${esc(k.email||'')}"></label>
-  <div class="grid2"><label class="f">Niveau<select name="niveau" id="fcNiv"><option value="">–</option>${o(NIV,k.niveau)}</select></label><label class="f">Technik<select name="technik" id="fcTech"><option value="">–</option>${o(TECH,k.technik)}</select></label></div>
-  <label class="f">Notiz (Material, Schuhgrösse, Kinder …)<textarea name="notiz" id="fcNotiz" rows="3">${esc(k.notiz||'')}</textarea></label>${saveRow}</form>`}
-const trow=t=>`<div class="trow"><input type="date" aria-label="Datum" value="${t.datum}" required><input type="time" aria-label="Zeit" value="${t.zeit}" step="900" required><select aria-label="Dauer">${DAUER.map(d=>`<option value="${d}"${+t.dauer===d?' selected':''}>${dShort(d)}</option>`).join('')}</select><button type="button" class="x" data-act="tRowDel" aria-label="Termin entfernen">×</button></div>`;
-function fmK(k){k=k||{};const tm=(k.termine&&k.termine.length)?k.termine:[{datum:nextSat(),zeit:'10:00',dauer:1.5}];
+  <label class="f">Allgemeine Notiz (Material, Schuhgrösse, Kinder …)<textarea name="notiz" id="fcNotiz" rows="3">${esc(k.notiz||'')}</textarea></label>${saveRow}</form>`}
+const trow=t=>`<div class="trow"><input type="date" aria-label="Datum" value="${t.datum}" required><input type="time" aria-label="Von" value="${t.zeit}" step="300" required><input type="time" aria-label="Bis" value="${bisOf(t)}" step="300" required><button type="button" class="x" data-act="tRowDel" aria-label="Termin entfernen">×</button></div>`;
+function fmK(k){k=k||{};const tm=(k.termine&&k.termine.length)?k.termine:[{datum:nextSat(),zeit:'10:00',bis:'11:30',dauer:1.5}];
   return `${shHead(k.id?'Gruppenkurs bearbeiten':'Neuer Gruppenkurs')}<form class="fm" data-form="K"><input type="hidden" name="id" value="${k.id||uid()}">
   <label class="f">Titel<input name="titel" id="fkTitel" value="${esc(k.titel||'')}" placeholder="Skating für Einsteiger" required></label>
   <div class="grid2"><label class="f">Preis pro Person, ganzer Kurs (CHF)<input name="preis" id="fkPreis" type="number" inputmode="decimal" step="0.05" min="0" value="${k.preis??''}" required></label><label class="f">Max. Personen<input name="max" id="fkMax" type="number" inputmode="numeric" min="1" max="60" value="${k.max??8}" required></label></div>
-  <label class="f">Treffpunkt<input name="treffpunkt" id="fkTp" value="${esc(k.treffpunkt||'')}" placeholder="${esc(S.cfg.treffpunkt)}"></label>
-  <div class="f"><span>Termine (Datum, Zeit, Dauer)</span><div id="trows">${tm.map(trow).join('')}</div><button type="button" class="btn ghost" data-act="tRowAdd">+ Termin eine Woche später</button></div>
+  <div class="f"><span>Technik</span>${segBtns('technik',TECH,k.technik||'Klassisch')}</div>
+  <div class="f"><span>Niveau (optional)</span>${segBtns('niveau',NIV,k.niveau||'',true)}</div>
+  <label class="f">Treffpunkt<select name="treffpunkt" id="fkTp">${tpOpts(k.treffpunkt)}</select></label>
+  <div class="f"><span>Termine (Datum, von, bis)</span><div id="trows">${tm.map(trow).join('')}</div><button type="button" class="btn ghost" data-act="tRowAdd">+ Termin eine Woche später</button></div>
   <label class="f">Notiz<textarea name="notiz" id="fkNotiz" rows="2">${esc(k.notiz||'')}</textarea></label>${saveRow}</form>`}
 function fmT(id){const k=getK(id);if(!k)return null;const taken=new Set((k.teilnehmer||[]).map(p=>p.kundeId));
   return `${shHead('Teilnehmer anmelden',esc(k.titel))}<form class="fm" data-form="T" data-preis="${+k.preis||0}"><input type="hidden" name="kurs" value="${id}">${kundeSelect('',taken)}
   <div class="grid2">${stepper(1)}<label class="f">Betrag CHF<input name="betrag" id="fBetrag" type="number" inputmode="decimal" step="0.05" min="0" value="${(+k.preis||0).toFixed(2)}" required></label></div>${saveRow}</form>`}
 function fmA(a){a=a||{};return `${shHead(a.id?'Ausgabe bearbeiten':'Neue Ausgabe')}<form class="fm" data-form="A"><input type="hidden" name="id" value="${a.id||uid()}">
   <div class="grid2"><label class="f">Datum<input type="date" name="datum" id="faDatum" value="${a.datum||today()}" required></label><label class="f">Betrag CHF<input name="betrag" id="faBetrag" type="number" inputmode="decimal" step="0.05" min="0" value="${a.betrag??''}" required></label></div>
-  <label class="f">Kategorie<select name="kategorie" id="faKat">${KAT.map(x=>`<option${x===a.kategorie?' selected':''}>${x}</option>`).join('')}</select></label>
-  <label class="f">Beschreibung<input name="text" id="faText" value="${esc(a.text||'')}" placeholder="Fahrt Flums – Tannenboden"></label>${saveRow}${a.id?`<button class="btn danger" type="button" data-act="delA" data-id="${a.id}">Ausgabe löschen</button>`:''}</form>`}
+  <label class="f">Kategorie<select name="kategorie" id="faKat">${(a.kategorie&&!KAT.includes(a.kategorie)?[a.kategorie,...KAT]:KAT).map(x=>`<option${x===a.kategorie?' selected':''}>${esc(x)}</option>`).join('')}</select></label>
+  <p class="hint" style="margin-top:-8px">Fahrten zu den Treffpunkten rechnet die App automatisch mit der Kilometerpauschale.</p>
+  <label class="f">Beschreibung<input name="text" id="faText" value="${esc(a.text||'')}" placeholder="Gleitwachs, Parkhaus Tannenboden …"></label>${saveRow}${a.id?`<button class="btn danger" type="button" data-act="delA" data-id="${a.id}">Ausgabe löschen</button>`:''}</form>`}
 function fmS(){const c=S.cfg,i=(n,l,t='text',x='')=>`<label class="f">${l}<input name="${n}" id="fs_${n}" type="${t}" value="${esc(c[n])}" ${x}></label>`,ta=(n,l,r=3)=>`<label class="f">${l}<textarea name="${n}" id="fs_${n}" rows="${r}">${esc(c[n])}</textarea></label>`;
   return `${shHead('Einstellungen')}<form class="fm" data-form="S">
   <div class="grid2">${i('stundentarif','Tarif pro Stunde (CHF)','number','inputmode="decimal" step="0.05" min="0" required')}${i('zuschlag','Zuschlag je weitere Person / Std','number','inputmode="decimal" step="0.05" min="0"')}</div>
-  ${i('treffpunkt','Standard-Treffpunkt')}
+  <div class="f"><span>Treffpunkte und km einfach ab Wohnort (der erste ist Standard)</span><div id="tprows">${tps().map(tprow).join('')}</div><button type="button" class="btn ghost" data-act="tpAdd">+ Treffpunkt</button></div>
+  <div class="grid2">${i('heimadresse','Wohnort (Start der Fahrten)')}${i('kmAnsatz','Ansatz pro km (CHF)','number','inputmode="decimal" step="0.01" min="0"')}</div>
+  <p class="hint" style="margin-top:-8px">Pro Kurstag und Treffpunkt zählt eine Fahrt hin und zurück. «Maps» zeigt die Route; die Distanz dort ablesen und eintragen.</p>
   <div class="grid2">${i('absender','Absender in Nachrichten')}${i('firma','Firma')}</div>
   ${ta('adresse','Adresse für Quittung und Abrechnung',2)}${i('email','E-Mail','email')}
-  <p class="hint">Platzhalter in Nachrichten: {name} {datum} {zeit} {dauer} {treffpunkt} {absender}</p>
+  <p class="hint">Platzhalter in Nachrichten: {vorname} {datum} {zeit} {bis} {dauer} {treffpunkt} {absender}</p>
   ${ta('tplOk','Nachricht Bestätigung')}${ta('tplErin','Nachricht Erinnerung')}${ta('tplAbs','Nachricht Absage')}${saveRow}</form>
   <section class="s"><h3>Datensicherung</h3>${dl?`<button class="btn" type="button" data-act="backup">Alle Daten sichern (JSON)</button>`:''}<p class="hint">${S.kunden.length} Kunden, ${S.lektionen.length} Lektionen, ${S.kurse.length} Gruppenkurse, ${S.ausgaben.length} Ausgaben, gespeichert in Firebase und auch offline auf diesem Gerät verfügbar.</p></section>
   ${ENV==='test'?`<section class="s"><h3>Testumgebung</h3><p class="hint" style="margin:0 0 8px">Eigene Testdatenbank, getrennt von den echten Daten.</p><div class="row"><button class="btn" type="button" data-act="seed">Testdaten laden</button><button class="btn danger" type="button" data-act="wipe">Alle Testdaten löschen</button></div></section>`:''}
   <section class="s"><h3>Konto</h3><p style="margin:0 0 8px">Angemeldet als <b>${esc(S.user?.email||'')}</b></p><button class="btn" type="button" data-act="logout">Abmelden</button></section>`}
-function recalc(f){if(f.dataset.manual)return;const p=+f.elements.personen.value||1;const b=f.dataset.form==='T'?(+f.dataset.preis||0)*p:calcB(+f.elements.dauer.value||1,p);f.elements.betrag.value=b.toFixed(2)}
+function recalc(f){const p=+f.elements.personen.value||1;
+  if(f.dataset.form==='L'){const dur=(hm(f.elements.bis.value)-hm(f.elements.zeit.value))/60,t=f.querySelector('#fDurTxt');if(t)t.textContent=dur>0?dTxt(dur):'«Bis» muss nach «Von» liegen';if(dur>0)f.dataset.dur=dur;if(f.dataset.manual||!(dur>0))return;f.elements.betrag.value=calcB(dur,p).toFixed(2);return}
+  if(f.dataset.manual)return;f.elements.betrag.value=((+f.dataset.preis||0)*p).toFixed(2)}
 const F={};
 F.L=async f=>{const d=Object.fromEntries(new FormData(f));let kid=d.kundeId;if(kid==='__neu'){kid=await newKunde(d);if(!kid)return}if(!kid){toast('Bitte Kunde wählen');return}
-  const o=getL(d.id)||{};const l={...o,id:d.id,kundeId:kid,datum:d.datum,zeit:d.zeit,dauer:+d.dauer,personen:+d.personen,betrag:+d.betrag,treffpunkt:(d.treffpunkt||'').trim(),notiz:(d.notiz||'').trim(),status:o.status||'geplant',bezahlt:!!o.bezahlt,zahlart:o.zahlart||'',bezahltAm:d.bezahltAm??o.bezahltAm??''};
+  const dur=(hm(d.bis)-hm(d.zeit))/60;if(!(dur>0)){toast('«Bis» muss nach «Von» liegen');return}
+  const o=getL(d.id)||{};const l={...o,id:d.id,kundeId:kid,datum:d.datum,zeit:d.zeit,bis:d.bis,dauer:Math.round(dur*100)/100,personen:+d.personen,betrag:+d.betrag,betragManuell:f.dataset.manual==='1',technik:d.technik||'',niveau:d.niveau||'',treffpunkt:d.treffpunkt||tpDef(),notiz:(d.notiz||'').trim(),status:o.status||'geplant',bezahlt:!!o.bezahlt,zahlart:o.zahlart||'',bezahltAm:d.bezahltAm??o.bezahltAm??''};
   if(await put('lektionen',l)){toast('Lektion gespeichert');openSheet(()=>shL(l.id),true)}};
-F.C=async f=>{const d=Object.fromEntries(new FormData(f));const o=kun(d.id)||{erstellt:today()};const k={...o,id:d.id,name:d.name.trim(),tel:d.tel.trim(),ort:d.ort.trim(),email:d.email.trim(),niveau:d.niveau,technik:d.technik,notiz:d.notiz.trim()};
-  if(!k.name){toast('Bitte Namen eingeben');return}if(await put('kunden',k)){toast('Kunde gespeichert');openSheet(()=>shC(k.id),true)}};
+F.C=async f=>{const d=Object.fromEntries(new FormData(f));const o=kun(d.id)||{erstellt:today()};const vn=d.vorname.trim(),nn=d.nachname.trim();if(!vn){toast('Bitte Vorname eingeben');return}
+  const ex=kByTel(d.tel,d.id);if(ex&&!o.id){toast(`Nummer gehört schon zu ${fullName(ex)}`);openSheet(()=>shC(ex.id),true);return}
+  const k={...o,id:d.id,vorname:vn,nachname:nn,name:[vn,nn].filter(Boolean).join(' '),tel:d.tel.trim(),ort:d.ort.trim(),email:d.email.trim(),notiz:d.notiz.trim()};
+  if(await put('kunden',k)){toast('Kunde gespeichert');openSheet(()=>shC(k.id),true)}};
 F.K=async f=>{const d=Object.fromEntries(new FormData(f));const o=getK(d.id);const ot=o?.termine||[];
-  const termine=[...f.querySelectorAll('.trow')].map(r=>{const [a,b,c]=r.querySelectorAll('input,select');const m=ot.find(t=>t.datum===a.value&&t.zeit===b.value);return {datum:a.value,zeit:b.value,dauer:+c.value,da:m?.da?[...m.da]:[]}}).filter(t=>t.datum).sort((a,b)=>(a.datum+a.zeit).localeCompare(b.datum+b.zeit));
+  const termine=[...f.querySelectorAll('.trow')].map(r=>{const [a,b,c]=r.querySelectorAll('input');const dur=(hm(c.value)-hm(b.value))/60;const m=ot.find(t=>t.datum===a.value&&t.zeit===b.value);return {datum:a.value,zeit:b.value,bis:c.value,dauer:dur>0?Math.round(dur*100)/100:0,da:m?.da?[...m.da]:[]}}).filter(t=>t.datum).sort((a,b)=>(a.datum+a.zeit).localeCompare(b.datum+b.zeit));
   if(!termine.length){toast('Mindestens einen Termin eintragen');return}
-  const k={...(o?structuredClone(o):{teilnehmer:[]}),id:d.id,titel:d.titel.trim(),preis:+d.preis,max:+d.max,treffpunkt:(d.treffpunkt||'').trim(),notiz:(d.notiz||'').trim(),termine};
+  if(termine.some(t=>!(t.dauer>0))){toast('Bei jedem Termin muss «bis» nach «von» liegen');return}
+  const k={...(o?structuredClone(o):{teilnehmer:[]}),id:d.id,titel:d.titel.trim(),preis:+d.preis,max:+d.max,technik:d.technik||'',niveau:d.niveau||'',treffpunkt:d.treffpunkt||tpDef(),notiz:(d.notiz||'').trim(),termine};
   if(await put('kurse',k)){toast('Gruppenkurs gespeichert');openSheet(()=>shK(k.id),true)}};
 F.T=async f=>{const d=Object.fromEntries(new FormData(f));let kid=d.kundeId;if(kid==='__neu'){kid=await newKunde(d);if(!kid)return}if(!kid){toast('Bitte Kunde wählen');return}
   const k=getK(d.kurs);if(!k)return;const p=+d.personen||1,besetzt=(k.teilnehmer||[]).filter(x=>!x.warte).reduce((s,x)=>s+(+x.personen||1),0),warte=besetzt+p>(+k.max||0);
   if(await updK(k.id,c=>{c.teilnehmer=c.teilnehmer||[];c.teilnehmer.push({kundeId:kid,personen:p,betrag:+d.betrag,bezahlt:false,zahlart:'',bezahltAm:'',warte})})){toast(warte?'Kurs ist voll: auf die Warteliste gesetzt':'Angemeldet');openSheet(()=>shK(k.id),true)}};
 F.A=async f=>{const d=Object.fromEntries(new FormData(f));if(await put('ausgaben',{id:d.id,datum:d.datum,betrag:+d.betrag,kategorie:d.kategorie,text:d.text.trim()})){toast('Ausgabe gespeichert');closeSheet()}};
-F.S=async f=>{const d=Object.fromEntries(new FormData(f));const c={...S.cfg,...d,stundentarif:+d.stundentarif||0,zuschlag:+d.zuschlag||0};if(await putCfg(c)){toast('Einstellungen gespeichert');closeSheet()}};
+F.S=async f=>{const d=Object.fromEntries(new FormData(f));const tp=[...f.querySelectorAll('.tprow')].map(r=>({name:r.querySelector('[data-f=name]').value.trim(),km:Math.round((+r.querySelector('[data-f=km]').value||0)*10)/10})).filter(x=>x.name);if(!tp.length){toast('Mindestens einen Treffpunkt eintragen');return}
+  const c={...S.cfg,...d,treffpunkte:tp,stundentarif:+d.stundentarif||0,zuschlag:+d.zuschlag||0,kmAnsatz:+d.kmAnsatz||0};delete c.treffpunkt;if(await putCfg(c)){toast('Einstellungen gespeichert');closeSheet()}};
 
 /* ---------- Export ---------- */
 async function offer(filename,data){if(!dl){toast('Download hier nicht verfügbar');return}try{await dl.save({filename,data})}catch(e){if(e?.code!=='declined')toast('Download nicht möglich ('+(e?.code||'Fehler')+')')}}
@@ -425,38 +481,39 @@ const fnSafe=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[
 let LOGO=null;fetch('logo-print.jpg').then(r=>r.ok?r.blob():null).then(b=>{if(!b)return;const fr=new FileReader();fr.onload=()=>{LOGO=fr.result};fr.readAsDataURL(b)}).catch(()=>{});
 function pdfHead(d,c,title,L,R){if(LOGO){try{d.addImage(LOGO,'JPEG',R-34,7,34,23.5)}catch(e){}}d.setDrawColor(38,207,200);d.setLineWidth(0.8);d.line(L,38,R,38);d.setLineWidth(0.2);d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(1,22,39);d.text(c.firma||'Langlaufspass.ch',L,16);d.setTextColor(13,34,48);d.setFont('helvetica','normal');d.setFontSize(9);d.text([(c.adresse||'').split('\n').join(', '),c.email].filter(Boolean).join(' · '),L,21);d.setFont('helvetica','bold');d.setFontSize(20);d.text(title,L,34)}
 function pdfQuit(l){const {jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a5'}),c=S.cfg,L=14,R=134;let Y=48;pdfHead(d,c,'Quittung',L,R);
-  const rows=[['Kunde',kName(l.kundeId)],['Leistung',`Langlauflektion, ${dTxt(l.dauer)}, ${l.personen||1} Pers.`],['Datum',fDs(l.datum)+', '+l.zeit+' Uhr'],['Treffpunkt',l.treffpunkt||c.treffpunkt],['Bezahlt am',`${fDs(l.bezahltAm)} per ${l.zahlart}`]];
+  const rows=[['Kunde',kName(l.kundeId)],['Leistung',`Langlauflektion${l.technik?' '+l.technik:''}, ${dTxt(l.dauer)}, ${l.personen||1} Pers.`],['Datum',`${fDs(l.datum)}, ${vonBis(l)} Uhr`],['Treffpunkt',tpName(l.treffpunkt)],['Bezahlt am',`${fDs(l.bezahltAm)} per ${l.zahlart}`]];
   d.setFontSize(11);rows.forEach(([k,v])=>{d.setFont('helvetica','normal');d.setTextColor(86,104,116);d.text(k,L,Y);d.setTextColor(13,34,48);const t=d.splitTextToSize(String(v),R-L-30);d.text(t,L+30,Y);Y+=Math.max(8,t.length*5+3)});
   Y+=4;d.setDrawColor(13,34,48);d.line(L,Y,R,Y);Y+=9;d.setFont('helvetica','bold');d.setFontSize(14);d.text('Betrag',L,Y);d.text('CHF '+num(l.betrag),R,Y,{align:'right'});
   Y+=16;d.setFont('helvetica','normal');d.setFontSize(11);d.text('Besten Dank und viel Spass auf der Loipe!',L,Y);Y+=7;d.text(c.absender||'',L,Y);return d.output('arraybuffer')}
 function pdfAbr(y){const {jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a4'}),c=S.cfg,L=18,R=192;let Y=44;
-  const ein=einnahmen(y),aus=ausgabenY(y),E=sum(ein),A=sum(aus);
+  const ein=einnahmen(y),aus=ausgabenY(y),fa=fahrten(y),E=sum(ein),AB=sum(aus),FA=sum(fa),A=AB+FA,ans=+c.kmAnsatz||0;
   const fit=(t,w)=>{let s=String(t??'');while(s&&d.getTextWidth(s)>w)s=s.slice(0,-1);return s};
   const nl=h=>{Y+=h;if(Y>277){d.addPage();Y=20}};
   pdfHead(d,c,`Abrechnung ${y}`,L,R);d.setFont('helvetica','normal');d.setFontSize(10);d.setTextColor(86,104,116);d.text(`Zeitraum 01.01.${y} bis 31.12.${y}. Einnahmen nach Datum des Zahlungseingangs.`,L,Y);d.setTextColor(13,34,48);nl(10);
   const kv=(k,v,b,ind)=>{d.setFont('helvetica',b?'bold':'normal');d.text(k,L+(ind?6:0),Y);d.text('CHF '+num(v),R,Y,{align:'right'});nl(6)};
   d.setFontSize(11);kv('Einnahmen total',E,true);groupSum(ein,'zahlart',ZA).forEach(([k,v])=>kv('davon '+k,v,false,true));nl(2);
-  kv('Ausgaben total',A,true);groupSum(aus,'kategorie',KAT).forEach(([k,v])=>kv(k,v,false,true));nl(2);d.setDrawColor(13,34,48);d.line(L,Y-4,R,Y-4);nl(1);
+  kv('Ausgaben total',A,true);groupSum(aus,'kategorie',KAT).forEach(([k,v])=>kv(k,v,false,true));if(fa.length)kv(`Kilometerpauschale (${fa.length} Kurstage, ${num1(kmSum(fa))} km à CHF ${num(ans)})`,FA,false,true);nl(2);d.setDrawColor(13,34,48);d.line(L,Y-4,R,Y-4);nl(1);
   d.setFontSize(12);kv('Ergebnis (Einnahmen minus Ausgaben)',E-A,true);nl(8);
   const table=(title,cols,rows,total)=>{if(Y>250){d.addPage();Y=20}d.setFont('helvetica','bold');d.setFontSize(13);d.text(title,L,Y);nl(7);d.setFontSize(9);const head=()=>{d.setFont('helvetica','bold');cols.forEach(([h,x,w,r])=>d.text(h,r?x+w:x,Y,r?{align:'right'}:undefined));d.setDrawColor(200,210,216);d.line(L,Y+1.5,R,Y+1.5);nl(5.5);d.setFont('helvetica','normal')};head();
     if(!rows.length){d.text('Keine Einträge.',L,Y);nl(6)}rows.forEach(r=>{const y0=Y;cols.forEach(([,x,w,ri],i)=>d.text(fit(r[i],w-2),ri?x+w:x,Y,ri?{align:'right'}:undefined));nl(5);if(Y<y0){head()}});
     d.setFont('helvetica','bold');d.line(L,Y-3.5,R,Y-3.5);d.text('Total',L,Y);d.text('CHF '+num(total),R,Y,{align:'right'});nl(10)};
   table('Einnahmen',[['Datum',L,20],['Kunde',L+20,40],['Leistung',L+60,72],['Zahlart',L+132,22],['Betrag',L+154,20,1]],ein.map(r=>[fDs(r.datum),r.kunde,r.leistung,r.zahlart,num(r.betrag)]),E);
-  table('Ausgaben',[['Datum',L,20],['Kategorie',L+20,40],['Beschreibung',L+60,94],['Betrag',L+154,20,1]],aus.map(a=>[fDs(a.datum),a.kategorie,a.text,num(a.betrag)]),A);
+  table('Ausgaben (Belege)',[['Datum',L,20],['Kategorie',L+20,40],['Beschreibung',L+60,94],['Betrag',L+154,20,1]],aus.map(a=>[fDs(a.datum),a.kategorie,a.text,num(a.betrag)]),AB);
+  table(`Fahrten ab ${c.heimadresse||DEF.heimadresse}`,[['Datum',L,20],['Treffpunkt',L+20,90],['km hin und zurück',L+110,40,1],['Betrag',L+154,20,1]],fa.map(x=>[fDs(x.datum),x.ort,num1(x.kmHR),num(x.betrag)]),FA);
   const n=d.getNumberOfPages();for(let i=1;i<=n;i++){d.setPage(i);d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(86,104,116);d.text(`${c.firma||''} · Abrechnung ${y} · erstellt am ${fDs(today())}`,L,290);d.text(`Seite ${i} von ${n}`,R,290,{align:'right'})}
   return d.output('arraybuffer')}
 async function importVcf(file){if(!file)return;const txt=(await file.text()).replace(/\r\n/g,'\n').replace(/=\n/g,'').replace(/\n[ \t]/g,'');const cards=txt.split(/BEGIN:VCARD/i).slice(1);
   const val=(c,key)=>{const m=c.match(new RegExp('^(?:[\\w-]+\\.)?'+key+'([;:][^\\n]*)$','im'));if(!m)return '';const s=m[1],i=s.indexOf(':');let v=s.slice(i+1).trim();if(/QUOTED-PRINTABLE/i.test(s.slice(0,i))){try{v=decodeURIComponent(v.replace(/=([0-9A-F]{2})/gi,'%$1'))}catch(e){}}return v.replace(/\\,/g,',').replace(/\\;/g,';')};
-  const list=cards.map(c=>{let name=val(c,'FN');if(!name){const p=val(c,'N').split(';');name=[p[1],p[0]].filter(Boolean).join(' ')}return {name:name.trim(),tel:val(c,'TEL'),email:val(c,'EMAIL'),ort:(val(c,'ADR').split(';')[3]||'').trim()}});
+  const list=cards.map(c=>{const nn=val(c,'N').split(';');let name=val(c,'FN');if(!name)name=[nn[1],nn[0]].filter(Boolean).join(' ');return {name:name.trim(),vorname:(nn[1]||'').trim(),nachname:(nn[0]||'').trim(),tel:val(c,'TEL'),email:val(c,'EMAIL'),ort:(val(c,'ADR').split(';')[3]||'').trim()}});
   await addMany(list)}
 
-async function seedTest(){const t=today(),d=n=>addD(t,n),k=[['Familie Meier','079 555 01 01','Flums','Einsteiger','Klassisch','2 Kinder, Mietmaterial'],['Sandra Keller','078 555 02 02','Walenstadt','Fortgeschritten','Skating',''],['Peter Gruber','076 555 03 03','Mels','Sportlich','Skating',''],['Anna Bossart','079 555 04 04','Sargans','Einsteiger','Beides','']].map(([name,tel,ort,niveau,technik,notiz])=>({id:uid(),name:name+' (Test)',tel,email:'',ort,niveau,technik,notiz,erstellt:t}));
+async function seedTest(){const t=today(),d=n=>addD(t,n),T=tps().map(x=>x.name),k=[['Familie','Meier (Test)','079 555 01 01','Flums','2 Kinder, Mietmaterial 32/35'],['Sandra','Keller (Test)','078 555 02 02','Walenstadt',''],['Peter','Gruber (Test)','076 555 03 03','Mels',''],['Anna','Bossart (Test)','079 555 04 04','Sargans','']].map(([vorname,nachname,tel,ort,notiz])=>({id:uid(),vorname,nachname,name:vorname+' '+nachname,tel,email:'',ort,notiz,erstellt:t}));
   for(const x of k)await put('kunden',x);
-  const L=[[0,0,'10:00',1.5,3,'geplant',0],[1,0,'14:00',1,1,'geplant',0],[2,-3,'09:30',1,1,'durchgeführt','TWINT'],[3,-1,'11:00',2,2,'durchgeführt',0],[1,3,'15:00',1,1,'geplant',0],[0,-10,'10:00',1,2,'durchgeführt','Bar']];
-  for(const [ki,off,zeit,dauer,personen,status,za] of L)await put('lektionen',{id:uid(),kundeId:k[ki].id,datum:d(off),zeit,dauer,personen,betrag:calcB(dauer,personen),treffpunkt:'',notiz:'',status,bezahlt:!!za,zahlart:za||'',bezahltAm:za?d(off):''});
-  await put('kurse',{id:uid(),titel:'Skating für Einsteiger (Test)',preis:180,max:6,treffpunkt:'',notiz:'',termine:[2,9,16].map(n=>({datum:d(n),zeit:'18:30',dauer:1.5,da:[]})),teilnehmer:[{kundeId:k[2].id,personen:1,betrag:180,bezahlt:true,zahlart:'Überweisung',bezahltAm:d(-2),warte:false},{kundeId:k[3].id,personen:2,betrag:360,bezahlt:false,zahlart:'',bezahltAm:'',warte:false}]});
+  const LL=[[0,0,'10:00','11:30',3,'Klassisch','Einsteiger',0,'geplant',0,''],[1,0,'14:00','15:00',1,'Skating','Fortgeschritten',1,'geplant',0,''],[2,-3,'09:30','10:30',1,'Skating','Sportlich',0,'durchgeführt','TWINT','Arbeitet am 1:1, Armeinsatz gut'],[3,-1,'11:00','13:00',2,'Klassisch','Einsteiger',2,'durchgeführt',0,'Bremsen im Pflug üben'],[1,3,'15:00','16:00',1,'Skating','',0,'geplant',0,''],[0,-10,'10:00','11:00',2,'Klassisch','Einsteiger',0,'durchgeführt','Bar','Kinder brauchen kürzere Stöcke']];
+  for(const [ki,off,zeit,bis,personen,technik,niveau,tpi,status,za,notiz] of LL){const dauer=(hm(bis)-hm(zeit))/60;await put('lektionen',{id:uid(),kundeId:k[ki].id,datum:d(off),zeit,bis,dauer,personen,betrag:calcB(dauer,personen),betragManuell:false,technik,niveau,treffpunkt:T[tpi]||T[0],notiz,status,bezahlt:!!za,zahlart:za||'',bezahltAm:za?d(off):''})}
+  await put('kurse',{id:uid(),titel:'Skating für Einsteiger (Test)',preis:180,max:6,technik:'Skating',niveau:'Einsteiger',treffpunkt:T[0],notiz:'',termine:[-5,2,9].map(n=>({datum:d(n),zeit:'18:30',bis:'20:00',dauer:1.5,da:[]})),teilnehmer:[{kundeId:k[2].id,personen:1,betrag:180,bezahlt:true,zahlart:'Überweisung',bezahltAm:d(-2),warte:false},{kundeId:k[3].id,personen:2,betrag:360,bezahlt:false,zahlart:'',bezahltAm:'',warte:false}]});
   await put('ausgaben',{id:uid(),datum:d(-5),betrag:48.5,kategorie:'Material & Wachs',text:'Gleitwachs (Test)'});
-  await put('ausgaben',{id:uid(),datum:d(-2),betrag:22,kategorie:'Fahrtkosten',text:'Fahrt Flums – Tannenboden (Test)'})}
+  await put('ausgaben',{id:uid(),datum:d(-2),betrag:6,kategorie:'Parkgebühren & ÖV',text:'Parkhaus Tannenboden (Test)'})}
 
 /* ---------- Oberfläche ---------- */
 function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(e._t);e._t=setTimeout(()=>e.hidden=true,2800)}
@@ -477,8 +534,14 @@ const A={
   login:()=>FB&&FB.login().catch(e=>toast('Anmeldung fehlgeschlagen ('+(e?.code||'Fehler')+')')),
   logout:()=>ask('Abmelden?','Abmelden',()=>FB&&FB.logout()),
   pickMany:async()=>{const l=await pick(true);if(l.length)addMany(l)},
-  pickNew:async b=>{const [c]=await pick(false);if(!c)return;const f=b.closest('form');f.elements.nkName.value=c.name;f.elements.nkTel.value=c.tel},
-  pickC:async b=>{const [c]=await pick(false);if(!c)return;const f=b.closest('form');f.elements.name.value=c.name;if(c.tel)f.elements.tel.value=c.tel;if(c.email)f.elements.email.value=c.email},
+  pickNew:async b=>{const [c]=await pick(false);if(!c)return;const f=b.closest('form'),nm=splitName(c.name);f.elements.nkVorname.value=nm.vorname;f.elements.nkNachname.value=nm.nachname;f.elements.nkTel.value=c.tel;telHit(f.elements.nkTel)},
+  pickC:async b=>{const [c]=await pick(false);if(!c)return;const f=b.closest('form'),nm=splitName(c.name);f.elements.vorname.value=nm.vorname;f.elements.nachname.value=nm.nachname;if(c.tel){f.elements.tel.value=c.tel;telHit(f.elements.tel)}if(c.email)f.elements.email.value=c.email},
+  useK:b=>{const f=b.closest('form');f.elements.kundeId.value=b.dataset.id;f.querySelector('.newk').hidden=true;const i=f.querySelector('#kInfo');if(i)i.innerHTML=kInfo(b.dataset.id)},
+  fDur:b=>{const f=b.closest('form');f.elements.bis.value=hmS(hm(f.elements.zeit.value)+Math.round(+b.dataset.v*60));recalc(f)},
+  fCalc:b=>{const f=b.closest('form');delete f.dataset.manual;recalc(f);if(f.dataset.form!=='L'||!f.dataset.manual)toast('Betrag neu berechnet')},
+  fSeg:b=>{const seg=b.closest('.seg'),inp=seg.nextElementSibling,on=b.getAttribute('aria-pressed')==='true';if(on&&seg.dataset.opt){inp.value='';b.setAttribute('aria-pressed','false');return}inp.value=b.dataset.v;seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))},
+  tpAdd:()=>$('#tprows').insertAdjacentHTML('beforeend',tprow({name:'',km:''})),
+  tpDel:b=>{const r=$('#tprows');if(r.children.length>1)b.closest('.tprow').remove();else toast('Mindestens ein Treffpunkt')},
   no:()=>{const b=S.back;S.confirm=null;b?openSheet(b.fn,b.live):closeSheet()},
   yes:()=>{const f=S.confirm;S.confirm=null;closeSheet();f&&f()},
   settings:()=>S.user&&openSheet(fmS),
@@ -497,13 +560,13 @@ const A={
   fPers:b=>{const f=b.closest('form'),i=f.elements.personen;i.value=Math.max(1,Math.min(40,(+i.value||1)+(+b.dataset.d)));f.querySelector('output').textContent=i.value;recalc(f)},
   editC:b=>openSheet(()=>fmC(kun(b.dataset.id))),
   delC:b=>{const id=b.dataset.id,n=S.lektionen.filter(l=>l.kundeId===id).length+S.kurse.filter(c=>(c.teilnehmer||[]).some(p=>p.kundeId===id)).length;if(n){toast(`Kunde hat ${n} Einträge und bleibt für die Abrechnung erhalten`);return}ask(`${kName(id)} löschen?`,'Löschen',()=>drop('kunden',id))},
-  copyC:b=>{const k=kun(b.dataset.id);if(!k)return;navigator.clipboard.writeText([k.name,k.tel,k.email].filter(Boolean).join('\n')).then(()=>toast('Kontakt kopiert'),()=>toast('Kopieren nicht möglich'))},
+  copyC:b=>{const k=kun(b.dataset.id);if(!k)return;navigator.clipboard.writeText([fullName(k),k.tel,k.email].filter(Boolean).join('\n')).then(()=>toast('Kontakt kopiert'),()=>toast('Kopieren nicht möglich'))},
   calDay:b=>{S.sel=b.dataset.d;const m=b.dataset.d.slice(0,7);if(m!==S.cal)S.cal=m;render()},
   calMove:b=>{const [y,m]=S.cal.split('-').map(Number);S.cal=iso(new Date(y,m-1+(+b.dataset.d),1)).slice(0,7);render()},
   calToday:()=>{S.cal=today().slice(0,7);S.sel=today();render()},
   editK:b=>openSheet(()=>fmK(getK(b.dataset.id))),
   delK:b=>{const k=getK(b.dataset.id);if(!k)return;if((k.teilnehmer||[]).some(p=>p.bezahlt)){toast('Kurs hat bezahlte Teilnehmer und bleibt für die Abrechnung erhalten');return}ask(`«${k.titel}» löschen?`,'Löschen',()=>drop('kurse',k.id))},
-  tRowAdd:()=>{const rows=$('#trows'),last=rows.lastElementChild,[a,b,c]=last?last.querySelectorAll('input,select'):[];rows.insertAdjacentHTML('beforeend',trow({datum:a?.value?addD(a.value,7):nextSat(),zeit:b?.value||'10:00',dauer:+(c?.value||1.5)}))},
+  tRowAdd:()=>{const rows=$('#trows'),last=rows.lastElementChild,[a,b,c]=last?last.querySelectorAll('input'):[];rows.insertAdjacentHTML('beforeend',trow({datum:a?.value?addD(a.value,7):nextSat(),zeit:b?.value||'10:00',bis:c?.value||'11:30'}))},
   tRowDel:b=>{const rows=$('#trows');if(rows.children.length>1)b.closest('.trow').remove();else toast('Mindestens ein Termin')},
   addT:b=>openSheet(()=>fmT(b.dataset.id)),
   tPay:b=>updK(b.dataset.id,c=>{const p=c.teilnehmer.find(x=>x.kundeId===b.dataset.k);if(p)Object.assign(p,{bezahlt:true,zahlart:b.dataset.v,bezahltAm:today()})}).then(ok=>ok&&toast('Als bezahlt erfasst')),
@@ -519,14 +582,15 @@ const A={
   pdf:()=>{if(!window.jspdf){toast('PDF-Modul nicht geladen');return}offer(`Abrechnung_${fnSafe(S.cfg.firma)}_${S.year}.pdf`,pdfAbr(S.year))},
   csvE:()=>offer(`Einnahmen_${S.year}.csv`,csv([['Zahlungsdatum','Kunde','Leistung','Zahlungsart','Betrag CHF'],...einnahmen(S.year).map(r=>[fDs(r.datum),r.kunde,r.leistung,r.zahlart,r.betrag.toFixed(2)])])),
   csvA:()=>offer(`Ausgaben_${S.year}.csv`,csv([['Datum','Kategorie','Beschreibung','Betrag CHF'],...ausgabenY(S.year).map(a=>[fDs(a.datum),a.kategorie,a.text,(+a.betrag||0).toFixed(2)])])),
+  csvF:()=>offer(`Fahrten_${S.year}.csv`,csv([['Datum','Treffpunkt','km einfach','km hin und zurück','Ansatz CHF/km','Betrag CHF'],...fahrten(S.year).map(x=>[fDs(x.datum),x.ort,num1(x.km),num1(x.kmHR),(+S.cfg.kmAnsatz||0).toFixed(2),x.betrag.toFixed(2)])])),
   seed:async()=>{if(ENV!=='test')return;closeSheet();await seedTest();toast('Testdaten geladen')},
   wipe:()=>{if(ENV!=='test')return;ask('Alle Testdaten löschen?','Alles löschen',async()=>{for(const c of ['kunden','lektionen','kurse','ausgaben'])for(const x of [...S[c]])await drop(c,x.id);toast('Testdaten gelöscht')})},
   backup:()=>offer(`Langlaufspass_Sicherung_${today()}.json`,JSON.stringify({exportiert:new Date().toISOString(),config:S.cfg,kunden:S.kunden,lektionen:S.lektionen,kurse:S.kurse,ausgaben:S.ausgaben},null,1))
 };
 document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const f=A[b.dataset.act];if(f){e.preventDefault();f(b)}});
 document.addEventListener('submit',e=>{e.preventDefault();const f=e.target,h=F[f.dataset.form];if(h)h(f)});
-document.addEventListener('input',e=>{const t=e.target;if(t.id==='kq'){S.q=t.value;$('#klist').innerHTML=kList()}else if(t.id==='fBetrag'&&t.form)t.form.dataset.manual='1'});
-document.addEventListener('change',e=>{const t=e.target;if(t.id==='fKunde'){const n=t.form.querySelector('.newk');n.hidden=t.value!=='__neu';if(!n.hidden)t.form.elements.nkName.focus()}else if(t.id==='vcf'){importVcf(t.files[0]).catch(()=>toast('Datei konnte nicht gelesen werden')).finally(()=>t.value='')}});
+document.addEventListener('input',e=>{const t=e.target;if(t.id==='kq'){S.q=t.value;$('#klist').innerHTML=kList()}else if(t.id==='fBetrag'&&t.form)t.form.dataset.manual='1';else if(t.id==='fZeit'&&t.form&&t.value){const f=t.form;f.elements.bis.value=hmS(hm(t.value)+Math.round((+f.dataset.dur||1)*60));recalc(f)}else if(t.id==='fBis'&&t.form)recalc(t.form);else if(t.id==='fNkTel'||t.id==='fcTel')telHit(t)});
+document.addEventListener('change',e=>{const t=e.target;if(t.id==='fKunde'){const n=t.form.querySelector('.newk');n.hidden=t.value!=='__neu';const i=t.form.querySelector('#kInfo');if(i)i.innerHTML=kInfo(t.value);if(!n.hidden)t.form.elements.nkVorname.focus()}else if(t.id==='vcf'){importVcf(t.files[0]).catch(()=>toast('Datei konnte nicht gelesen werden')).finally(()=>t.value='')}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.sheet)closeSheet()});
 const MIME={pdf:'application/pdf',csv:'text/csv;charset=utf-8',json:'application/json'};
 dl={save:async({filename,data})=>{const blob=data instanceof Blob?data:new Blob([data],{type:MIME[filename.split('.').pop()]||'application/octet-stream'});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);return {status:'saved'}}};
